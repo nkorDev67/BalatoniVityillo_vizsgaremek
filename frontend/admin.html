@@ -3,12 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+    /* Sidebar és tartalom elrendezése */
+        .wrapper { display: flex; flex: 1; }
+        .admin-sidebar { width: 200px; color: white; padding: 20px; }
+        .admin-sidebar ul { list-style: none; padding: 0; }
+        .admin-sidebar li { margin-bottom: 15px; }
+        .admin-sidebar a { color: #ecf0f1; text-decoration: none; cursor: pointer; }
+        
+        .admin-main-content { flex: 1; padding: 15px; background: #ecf0f1; }
+        
+        /* Szekciók elrejtése alapértelmezetten */
+        .content-section { display: none; }
+        .active-section { display: block; }
+    </style>
     <link rel="stylesheet" href="css/style.css">
     <title>Balatoni Vityilló</title>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </head>
 <body>
-    <nav class="navbar">
+<nav class="navbar">
         <ul>  
             <li> <a href="HomePage.html">Home</a></li>
             <li class="dropdown">
@@ -34,24 +48,68 @@
             </li>
             <li> <a href="Beosztas.html">(Ember függő) Beosztás</a></li>   
             <li> <a href="Profil.html">Profil</a></li>
+            <li> <a href="Admin.html">Admin</a></li>
         </ul>
     </nav>
-   
+
+
+<div class="wrapper">
+    <nav class="admin-sidebar">
+        <ul>
+            <li><a onclick="showSection('admin-keresek')">Kérések</a></li>
+            <li><a onclick="showSection('admin-munkasok')">Munkások</a></li>
+            <li><a onclick="showSection('admin-beosztas')">Beosztás</a></li>
+        </ul>
+    </nav>
+
+    <main class="admin-main-content" id="main-content">
+        <section id="home" class="content-section active-section">
+            <h1>Üdvözöljük a Balatoni Vityillónál!</h1>
+            <p>Válasszon a fenti vagy az oldalsó menüből a műveletek megkezdéséhez.</p>
+        </section>
+
+        <section id="admin-keresek" class="content-section">
+            <h1>Admin: Kérések</h1>
+            <p>Itt láthatóak a beérkező ügyfélkérések...</p>
+        </section>
+
+        <section id="admin-munkasok" class="content-section">
+            <h1>Admin: Munkások</h1>
+            <table class="table">
+                <thead><tr><th>Név</th><th>Munkakör</th></tr></thead>
+                <tbody><tr><td>Kovács János</td><td>Burkoló</td></tr></tbody>
+            </table>
+        </section>
+
+        <section id="berles" class="content-section">
+            <h1>Bérlés</h1>
+            <p>Aktuálisan elérhető nyaralók listája...</p>
+        </section>
+
+        <section id="profil" class="content-section">
+            <h1>Saját profil</h1>
+            <p>Itt szerkesztheti az adatait.</p>
+        </section>
+    </main>
 </div>
 
-<nav class="admin-sidebar">
+<script>
+    function showSection(sectionId) {
+        // Összes szekció elrejtése
+        const sections = document.querySelectorAll('.content-section');
+        sections.forEach(section => {
+            section.classList.remove('active-section');
+        });
 
-    <ul>
-        <li><a href="Admin_keresek.html">Kérések</a></li>
-        <li><a href="Admin_munkasok.html">Munkások</a></li>
-        <li><a href="Admin_beosztas.html">Beosztás</a></li>
-    </ul>
-</nav>
+        // A kiválasztott szekció megjelenítése
+        const activeSection = document.getElementById(sectionId);
+        if (activeSection) {
+            activeSection.classList.add('active-section');
+        } else {
+            console.error("Szekció nem található: " + sectionId);
+        }
+    }
+</script>
 
-<main class="admin-main-content">
-    <h1>Admin panel</h1>
-    <p>Válassz a bal oldali menüből!</p>
-</main>
-    
 </body>
 </html>
