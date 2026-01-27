@@ -1,3 +1,36 @@
+/* Mobil eszközök (768px szélesség alatt) */
+@media screen and (max-width: 768px) {
+    
+    /* 1. Konténer szélessége */
+    .container, .wrapper {
+        width: 95%; /* Ne legyen fix pixel, inkább százalék */
+        padding: 10px;
+        margin: 0 auto;
+    }
+
+    /* 2. Rugalmas elrendezés (Flexbox/Grid javítása) */
+    .row, .grid-container {
+        display: flex;
+        flex-direction: column; /* Egymás alá rakja az elemeket */
+    }
+
+    /* 3. Képek optimalizálása */
+    img {
+        max-width: 100%;
+        height: auto; /* Ne nyúljon el a kép */
+    }
+
+    /* 4. Betűméret és kattintható felületek */
+    body {
+        font-size: 16px; /* Mobilon a 16px az olvashatósági alap */
+    }
+
+    button, .nav-link {
+        padding: 12px 20px; /* Nagyobb érintési felület az ujjaknak */
+        display: block;
+        width: 100%; /* Mobilon kényelmesebb a teljes szélességű gomb */
+    }
+}
 body{
     margin: 0px;
 }
@@ -16,13 +49,14 @@ h1{
     top: 0;
     left: 0;
     width: 100%;
-    z-index: 1000;
-    padding: 10px 20px;
+    min-height: 60px;
+    z-index: 1100;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     background-color: hsl(17, 68%, 44%);
-    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    
 }
 .navbar ul {
     list-style-type: none;
@@ -394,31 +428,19 @@ margin-right: auto;
     display: none;
 }
 
-/* Reszponzivitás finomhangolása mobilon */
-@media (max-width: 768px) {
-    .profile-card, .stat-card {
-        flex: 1 1 100%; /* Mobilon minden 100% széles */
-        max-width: 100%;
-    }
-    
-    .info-row {
-        flex-direction: column;
-    }
-    
-    .info-label {
-        margin-bottom: 5px;
-    }
-}
+
+/* --- ALAPSTÍLUSOK (Minden eszközre) --- */
 .admin-sidebar {
-    position: fixed;     /* Ez fixálja le az oldalon */
+    position: fixed;
     left: 0;
-    top: 60px;           /* Itt hagysz helyet a felső navbarnak (állítsd be a magasságát!) */
+    top: 60px;
     width: 250px;
-    height: calc(100vh - 60px); /* A teljes magasság mínusz a felső navbar */
-    background-color: #2c3e50;
+    height: calc(100vh - 60px);
+    background-color: hsl(18, 36%, 23%);
     color: white;
-    z-index: 1000;        /* Alacsonyabb legyen, mint a navbar, ha az is fix */
-    overflow-y: auto;    /* Ha sok a gomb, lehessen benne görgetni */
+    z-index: 1000;
+    overflow-y: auto;
+    transition: transform 0.3s ease; /* Ez felel a sima beúszásért */
 }
 
 .admin-sidebar ul {
@@ -433,17 +455,73 @@ margin-right: auto;
     color: white;
     text-decoration: none;
     border-bottom: 1px solid #b16f18;
+    cursor: pointer;
 }
 
 .admin-sidebar ul li a:hover {
     background-color: #b16f18;
 }
 
-/* A tartalom eltolása, hogy ne takarják el a navigációk */
 .admin-main-content {
-    margin-left: 250px; /* Pontosan a sidebar szélessége */
-    margin-top: 20px;   /* Egy kis távolság a felső navbartól */
+    margin-top: 20px;
     padding: 20px;
+    background: #ecf0f1;
+    min-height: 100vh;
+}
+
+/* Szekciók kezelése */
+.content-section { display: none; }
+.active-section { display: block; }
+
+/* A "Fülecske" gomb (Alapból rejtve) */
+.sidebar-toggle {
+    position: fixed;
+    left: 0;
+    top: 65px;
+    background-color: #b16f18;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 0 5px 5px 0;
+    z-index: 1001;
+    display: none;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+}
+
+/* --- ASZTALI NÉZET (769px felett) --- */
+@media screen and (min-width: 769px) {
+    .admin-main-content {
+        margin-left: 250px; /* Itt fixen eltoljuk a tartalmat */
+    }
+}
+
+/* --- MOBIL NÉZET (768px és alatta) --- */
+@media screen and (max-width: 768px) {
+    .admin-sidebar {
+        transform: translateX(-100%); /* Rejtve balra */
+        width: 200px; /* Mobilon lehet kicsit keskenyebb */
+    }
+
+    /* Amikor a JS hozzáadja az .active osztályt */
+    .admin-sidebar.active {
+        transform: translateX(0); 
+    }
+
+    .admin-main-content {
+        margin-left: 0; /* Mobilon nincs fix eltolás */
+        padding: 15px;
+    }
+
+    .sidebar-toggle {
+        display: block; /* Mobilon megjelenik a fülecske */
+    }
+    
+    /* Táblázatok kezelése mobilon (ne lógjanak ki) */
+    .table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
 }
 .worker-box{
     height: 400px;

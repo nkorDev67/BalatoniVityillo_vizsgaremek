@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="css/style.css">
     <title>Balatoni Vityilló</title>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="js/admin.js"></script>
 </head>
 <body>
 <nav class="navbar">
@@ -53,8 +54,10 @@
     </nav>
 
 
+<button class="sidebar-toggle" onclick="toggleSidebar()">☰ Menü</button>
+
 <div class="wrapper">
-    <nav class="admin-sidebar">
+    <nav class="admin-sidebar" id="sidebar">
         <ul>
             <li><a onclick="showSection('admin-keresek')">Kérések</a></li>
             <li><a onclick="showSection('admin-munkasok')">Munkások</a></li>
@@ -94,21 +97,7 @@
 </div>
 
 <script>
-    function showSection(sectionId) {
-        // Összes szekció elrejtése
-        const sections = document.querySelectorAll('.content-section');
-        sections.forEach(section => {
-            section.classList.remove('active-section');
-        });
-
-        // A kiválasztott szekció megjelenítése
-        const activeSection = document.getElementById(sectionId);
-        if (activeSection) {
-            activeSection.classList.add('active-section');
-        } else {
-            console.error("Szekció nem található: " + sectionId);
-        }
-    }
+    
 </script>
 
 </body>
