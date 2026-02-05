@@ -29,24 +29,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <li className="dropdown">
               <span className="dropbtn">Bérlés</span>
               <div className="dropdown-content">
-                <Link href="/BerbeAdas">Bérbe adás</Link>
-                <Link href="/Berles">Bérlés</Link>
+                <Link href="/berbeadas">Bérbe adás</Link>
+                <Link href="/berles">Bérlés</Link>
               </div>
             </li>
 
             <li className="dropdown">
               <span className="dropbtn">Ingatlan</span>
               <div className="dropdown-content">
-                <Link href="/Adas">Adás</Link>
-                <Link href="/Vetel">Vétel</Link>
+                <Link href="/adas">Adás</Link>
+                <Link href="/vetel">Vétel</Link>
               </div>
             </li>
 
             <li className="dropdown">
               <span className="dropbtn">Felújítás</span>
               <div className="dropdown-content">
-                <Link href="/Arajanlat">Árajánlat</Link>
-                <Link href="/Felujitaskerese">Felújítás kérése</Link>
+                <Link href="/arajanlat">Árajánlat</Link>
+                <Link href="/felujitaskeres">Felújítás kérése</Link>
               </div>
             </li>
 
