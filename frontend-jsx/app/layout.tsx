@@ -42,14 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
             </li>
 
-            <li className="dropdown">
-              <span className="dropbtn">Felújítás</span>
-              <div className="dropdown-content">
-                <Link href="/arajanlat">Árajánlat</Link>
-                <Link href="/felujitaskeres">Felújítás kérése</Link>
-              </div>
-            </li>
-
+            <li><Link href="/felujitaskeres">Felújítás kérése</Link></li>
             <li><Link href="/beosztas">Beosztás</Link></li>   
             <li><Link href="/profil">Profil</Link></li>
             <li><Link href="/admin">Admin</Link></li>
