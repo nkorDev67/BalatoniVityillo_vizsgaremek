@@ -29,7 +29,7 @@ export default function ProfilPage() {
 
   return (
     <main className="main-wrapper" style={{ paddingTop: '100px' }}>
-      <h1>Balatoni Vityilló</h1>
+      <h1>Üdv, {user.name}!</h1>
 
       <div className="profile-container">
         
@@ -108,7 +108,7 @@ export default function ProfilPage() {
           <div className="profile-body">
             <ul className="stat-list">
               <li className="stat-item">
-                <span>Aktív bérlések</span>
+                <span>Aktív Felújítások</span>
                 <span className="stat-badge">2</span>
               </li>
               <li className="stat-item">
