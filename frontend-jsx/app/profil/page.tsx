@@ -27,6 +27,11 @@ export default function ProfilPage() {
     console.log("Mentés a dummy adatbázisba:", formData);
   };
 
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.href = "/login";
+  }
+
   return (
     <main className="main-wrapper" style={{ paddingTop: '100px' }}>
       <h1>Üdv, {user.name}!</h1>
@@ -38,6 +43,7 @@ export default function ProfilPage() {
           <div className="profile-card">
             <div className="profile-header">
               <h3>Személyes adatok</h3>
+              <button className="btn-logout" onClick={handleLogout}>Kijelentkezés</button>
               <button className="btn-edit" onClick={handleEditToggle}>Szerkesztés</button>
             </div>
             <div className="profile-body">

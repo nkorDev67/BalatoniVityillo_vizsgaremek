@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/dist/client/link";
+import Navbar from "@/components/Navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,6 +23,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="hu">
       <body>
+
+      <Navbar />
+
+       {/* 
         <nav className="navbar">
           <ul>  
             <li><Link href="/">Home</Link></li>
@@ -48,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <li><Link href="/admin">Admin</Link></li>
           </ul>
         </nav>
+        */}
 
         {/* Ez a rész "cserélődik" majd az aktuális oldal tartalmára */}
         <main>{children}</main>

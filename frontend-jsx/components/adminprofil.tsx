@@ -15,6 +15,11 @@ export default function ProfilPage() {
   const [user, setUser] = useState(dummyUser);
   const [formData, setFormData] = useState(dummyUser);
 
+  const handleLogout = () => {
+      localStorage.clear();
+      window.location.href = "/login";
+    }
+  
   const handleEditToggle = () => {
     setFormData(user);
     setIsEditing(!isEditing);
@@ -38,7 +43,10 @@ export default function ProfilPage() {
           <div className="profile-card">
             <div className="profile-header">
               <h3>Személyes adatok</h3>
+              <button className="btn-logout" onClick={handleLogout}>Kijelentkezés</button>
+
               <button className="btn-edit" onClick={handleEditToggle}>Szerkesztés</button>
+              
             </div>
             <div className="profile-body">
               

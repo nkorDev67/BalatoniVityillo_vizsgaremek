@@ -390,6 +390,14 @@ margin-right: auto;
 }
 
 /* Gombok a profilban */
+.btn-logout{
+     background-color: #fff !important;
+    color: hsl(17, 68%, 44%) !important;
+    width: auto !important;
+    padding: 5px 15px !important;
+    margin: 0 !important;
+    font-size: 13px !important;
+}
 .btn-edit {
     background-color: #fff !important;
     color: hsl(17, 68%, 44%) !important;

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import styles from '../admin.module.css';
+import styles from '../app/admin/admin.module.css';
 
 interface Munkas {
   id: number;

@@ -30,11 +30,11 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
     try {
-        const { email, jelszo } = req.body;
+        const { login_identity, pw } = req.body;
         const pool = await poolPromise;
 
         const result = await pool.request()
-            .input('email', sql.NVarChar, email)
+            .input('email', sql.NVarChar, login_identity)
             .query('SELECT * FROM Felhasznalo WHERE Email = @email');
 
         const user = result.recordset[0];
@@ -42,7 +42,7 @@ exports.login = async (req, res) => {
         if (!user) return res.status(401).json({ message: "Hibás email vagy jelszó!" });
 
         // Titkosított jelszó ellenőrzése
-        const isMatch = await bcrypt.compare(jelszo, user.Jelszo);
+        const isMatch = await bcrypt.compare(pw, user.Jelszo);
         if (!isMatch) return res.status(401).json({ message: "Hibás email vagy jelszó!" });
 
         // Token generálása - beletesszük az ID-t és a JOGOT
@@ -52,8 +52,17 @@ exports.login = async (req, res) => {
             { expiresIn: '1d' }
         );
 
-        res.json({ token, user: { id: user.FelhasznaloId, nev: user.Felhasznalonev, jog: user.Jogosultsag } });
+       res.json({ 
+            token, 
+            role: user.Jogosultsag, 
+            user: { 
+                id: user.FelhasznaloId, 
+                nev: user.Felhasznalonev, 
+                jog: user.Jogosultsag 
+            } 
+        });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ error: "Szerverhiba a belépésnél." });
     }
 };

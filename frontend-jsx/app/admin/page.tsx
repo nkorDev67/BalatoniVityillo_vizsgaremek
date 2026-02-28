@@ -1,13 +1,26 @@
 "use client";
-import { useState } from 'react';
+import { act, useEffect, useState } from 'react';
 import styles from './admin.module.css';
-import MunkasKezelo from './components/munkaskezelo';
-import BeosztasKezelo from './components/beosztaskezelo';
-import ProfilPage from './components/profil';
+import MunkasKezelo from '../../components/munkaskezelo';
+import BeosztasKezelo from '../../components/beosztaskezelo';
+import ProfilPage from '../../components/adminprofil';
+import AdminCard from '@/components/AdminCard';
+import FelujitasKeresePage from '../felujitaskeres/page';
+
+interface FelujitasKeres {
+  FelujitasId: number;
+  HelyszinCim: string;
+  Leiras: string;
+  Statusz: string;
+  UgyfelNeve: string;
+  LetrehozasDatuma: string;
+}
 
 export default function AdminPage() {
   
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [keresek, setKeresek] = useState<FelujitasKeres[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const [munkasok, setMunkasok] = useState([
     { id: 1, nev: "Kovács Elek", email: "elek@vityillo.hu", telefonszam: "123-456-7890", szak: "Festő" },
@@ -21,6 +34,31 @@ export default function AdminPage() {
     { id: 9, nev: "Lukács András", email: "andras@vityillo.hu", telefonszam: "222-333-4444", szak: "Vízvezetékszerelő" },
   ]);
   
+  const fetchKeresek = async () => {
+    setLoading(true);
+    try{
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/admin/requests', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+      }
+    });
+    const data = await response.json();
+    setKeresek(data);
+  } catch(error){
+    console.error("Hiba az adatok lekérdezésekor:", error);
+  } finally{
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (activeTab == 'kerelmek'){
+      fetchKeresek();
+    }
+  }, [activeTab])
+
+}
+
 
   return (
     <main className={styles.adminWrapper}>
@@ -65,13 +103,22 @@ export default function AdminPage() {
         )}
 
   {activeTab === 'kerelmek' && (
-          <section>
-            <h1>Beérkező kérelmek</h1>
-            <div className="profile-card">
-              <div className="profile-body">
-                <p>Ügyfelek felújítási kérései (Felujitas tábla)</p>
+        <section>
+            <h1 className="mb-4">Beérkező felújítási kérelmek</h1>
+            
+            {loading ? (
+              <p>Betöltés...</p>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                {keresek.length > 0 ? (
+                  keresek.map((keres) => (
+                    <AdminCard key={keres.FelujitasId} keres={keres} />
+                  ))
+                ) : (
+                  <p>Nincs megjeleníthető kérelem.</p>
+                )}
               </div>
-            </div>
+            )}
           </section>
         )}
 

@@ -203,3 +203,68 @@
 
 .statusMissing { background-color: #ffeaa7; color: #d63031; } /* Sárga - Nincs ember */
 .statusAssigned { background-color: #55efc4; color: #00b894; } /* Zöld - Van ember */
+
+.card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #e5e7eb;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f3f4f6;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.statusBadge {
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.dateInfo {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-top: 10px;
+}
+
+.footer {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dateInput {
+    padding: 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+}
+
+.saveButton {
+    background-color: #10b981;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.saveButton:disabled {
+    background-color: #9ca3af;
+}
