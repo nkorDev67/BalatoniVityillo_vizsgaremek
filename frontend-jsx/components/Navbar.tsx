@@ -51,8 +51,8 @@ export default function Navbar() {
         {role === "admin" && (
           <li><Link href="/admin">Admin</Link></li>
         )}
-        {role ==="felhasznalo" || role === "szakember" &&(
-             <li><Link href="/profil">Profil</Link></li>
+        {(role === "felhasznalo" || role === "szakember") && (
+        <li><Link href="/profil">Profil</Link></li>
         )}
        
 

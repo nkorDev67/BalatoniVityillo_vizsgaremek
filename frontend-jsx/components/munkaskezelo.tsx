@@ -7,7 +7,8 @@ interface Munkas {
   nev: string;
   email: string;
   telefonszam: string;
-  szak: string
+  szak?: string;
+  jogosultsag?: string;
 }
 
 interface Props {
@@ -21,18 +22,49 @@ export default function MunkasKezelo({ munkasok, setMunkasok }: Props) {
   const [ujEmail, setUjEmail] = useState("");
   const [ujSzakma, setUjSzakma] = useState("Festő");
 
-  const handleKirugas = (id: number) => {
-    if (confirm("Biztosan törölni szeretnéd ezt a munkást?")) {
+  const handleKirugas = async (id: number) => {
+    if (!confirm("Biztosan törölni / visszafokozni szeretnéd ezt a munkást?")) return;
+    try {
+      const token = localStorage.getItem('token');
+      const resp = await fetch(`http://localhost:5000/api/admin/workers/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!resp.ok) throw new Error('A szerver nem válaszolt rendesen');
       setMunkasok(munkasok.filter(m => m.id !== id));
+    } catch (err) {
+      console.error('kirúgás hiba:', err);
+      alert('Nem sikerült törölni a munkást.');
     }
   };
 
-  const handleFelvetel = (e: React.FormEvent) => {
+  const handleFelvetel = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Új munkás hozzáadva: ${ujEmail}`);
-    // Ide jön majd később a backend hívás!
-    setUjEmail("");
-    setIsModalOpen(false);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/admin/workers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ email: ujEmail, szak: ujSzakma }),
+      });
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || 'Hiba történt a munkás felvételekor');
+      }
+      const uj = await response.json();
+      // frissítsük a lista állapotát (szakemberként kell megjelenni)
+      if (uj.jogosultsag === 'szakember') {
+        setMunkasok(prev => [...prev, uj]);
+      }
+      setUjEmail("");
+      setIsModalOpen(false);
+    } catch (err: any) {
+      alert('Nem sikerült felvenni a munkást: ' + err.message);
+      console.error(err);
+    }
   };
 
   return(
@@ -47,16 +79,20 @@ export default function MunkasKezelo({ munkasok, setMunkasok }: Props) {
                 <div>Név</div>
                 <div>Email</div>
                 <div>Telefonszám</div>
+                <div>Szakma</div>
               </div>
               <div className={styles.scrollArea}>
-                {munkasok.map(munkas => (
-                  <div key={munkas.id} className={styles.workerRow}>
-                    <div>{munkas.nev}</div>
-                    <div>{munkas.email}</div>
-                    <div>{munkas.telefonszam}</div>
-                    <button onClick={() => handleKirugas(munkas.id)} className={styles.fireBtn}>Kirúgás</button>
-                  </div>
-                ))}
+                {munkasok
+                  .filter(m => m.jogosultsag === 'szakember')
+                  .map(munkas => (
+                    <div key={munkas.id} className={styles.workerRow}>
+                      <div>{munkas.nev}</div>
+                      <div>{munkas.email}</div>
+                      <div>{munkas.telefonszam}</div>
+                      <div>{munkas.szak || '-'}</div>
+                      <button onClick={() => handleKirugas(munkas.id)} className={styles.fireBtn}>Kirúgás</button>
+                    </div>
+                  ))}
               </div>
 
             </div>

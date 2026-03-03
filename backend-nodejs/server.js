@@ -7,9 +7,14 @@ const app = express()
 
 app.use(cors())
 app.use(express.json())
-app.use('/api/felujitas', felujitasRoutes)
 
+// általános útvonalak
+app.use('/api/felujitas', felujitasRoutes)
 app.use('/api/auth', authRoutes)
+
+// admin-specifikus végpontok (ellenőrizni fogjuk a token->isAdmin közben)
+const adminRoutes = require('./routes/adminRoutes');
+app.use('/api/admin', adminRoutes)
 
 const PORT = process.env.PORT || 5000
 app.listen(PORT, () => {
