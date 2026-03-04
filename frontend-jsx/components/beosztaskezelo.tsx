@@ -6,10 +6,17 @@ interface Munkas {
   id: number;
   nev: string;
   email: string;
-  szak: string;
+  szak?: string;
 }
 
-export default function BeosztasKezelo({ munkasok }: { munkasok: Munkas[] }) {
+interface Feladat {
+  id: number;
+  helyszin: string;
+  tipus: string;
+  datum: string;
+}
+
+export default function BeosztasKezelo({ munkasok, feladatok = [] }: { munkasok: Munkas[]; feladatok?: Feladat[] }) {
   // Ebben az állapotban tároljuk, hogy melyik feladathoz (index) melyik munkásokat rendeltük hozzá
   const [kiosztasok, setKiosztasok] = useState<{ [key: number]: number[] }>({});
 
@@ -41,45 +48,52 @@ export default function BeosztasKezelo({ munkasok }: { munkasok: Munkas[] }) {
           </tr>
         </thead>
         <tbody>
-          {/* Példa sor */}
-          <tr className={styles.taskRow}>
-            <td className={styles.taskCell}>Budapest, Váci út 12.</td>
-            <td className={styles.taskCell}><b>Festés</b> (40 m²)</td>
-            <td className={styles.taskCell}>2024.06.15.</td>
-            <td className={styles.taskCell}>
-              {/* Egy kis görgethető doboz a munkásoknak */}
-              <div style={{ 
-                maxHeight: '100px', 
-                overflowY: 'auto', 
-                border: '1px solid #ccc', 
-                padding: '5px',
-                borderRadius: '4px',
-                background: '#fff'
-              }}>
-                {munkasok.map(m => (
-                  <div key={m.id} style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <input 
-                      type="checkbox" 
-                      id={`m-${m.id}`}
-                      checked={kiosztasok[0]?.includes(m.id) || false}
-                      onChange={() => handleMunkasValtoztatas(0, m.id)}
-                    />
-                    <label htmlFor={`m-${m.id}`}>{m.nev} ({m.szak})</label>
-                  </div>
-                ))}
-              </div>
-              <small style={{ color: '#666' }}>
-                Kijelölve: {kiosztasok[0]?.length || 0} fő
-              </small>
-            </td>
-            <td className={styles.taskCell}>
-              <span className={`${styles.statusBadge} ${
-                (kiosztasok[0]?.length || 0) > 0 ? styles.statusAssigned : styles.statusMissing
-              }`}>
-                {(kiosztasok[0]?.length || 0) > 0 ? "Beosztva" : "Kiosztásra vár"}
-              </span>
-            </td>
-          </tr>
+          {feladatok.length === 0 && (
+            <tr>
+              <td colSpan={5} style={{ textAlign: 'center', padding: '20px' }}>
+                Nincsenek beosztandó feladatok.
+              </td>
+            </tr>
+          )}
+          {feladatok.map((feladat, fi) => (
+            <tr key={feladat.id || fi} className={styles.taskRow}>
+              <td className={styles.taskCell}>{feladat.helyszin}</td>
+              <td className={styles.taskCell}>{feladat.tipus}</td>
+              <td className={styles.taskCell}>{feladat.datum}</td>
+              <td className={styles.taskCell}>
+                <div style={{ 
+                  maxHeight: '100px', 
+                  overflowY: 'auto', 
+                  border: '1px solid #ccc', 
+                  padding: '5px',
+                  borderRadius: '4px',
+                  background: '#fff'
+                }}>
+                  {munkasok.map(m => (
+                    <div key={m.id} style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <input 
+                        type="checkbox" 
+                        id={`m-${feladat.id}-${m.id}`}
+                        checked={kiosztasok[feladat.id]?.includes(m.id) || false}
+                        onChange={() => handleMunkasValtoztatas(feladat.id, m.id)}
+                      />
+                      <label htmlFor={`m-${feladat.id}-${m.id}`}>{m.nev} {m.szak ? `(${m.szak})` : ''}</label>
+                    </div>
+                  ))}
+                </div>
+                <small style={{ color: '#666' }}>
+                  Kijelölve: {kiosztasok[feladat.id]?.length || 0} fő
+                </small>
+              </td>
+              <td className={styles.taskCell}>
+                <span className={`${styles.statusBadge} ${
+                  (kiosztasok[feladat.id]?.length || 0) > 0 ? styles.statusAssigned : styles.statusMissing
+                }`}>
+                  {(kiosztasok[feladat.id]?.length || 0) > 0 ? "Beosztva" : "Kiosztásra vár"}
+                </span>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
       

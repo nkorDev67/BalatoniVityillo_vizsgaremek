@@ -20,19 +20,41 @@ export default function AdminPage() {
   
   const [activeTab, setActiveTab] = useState('dashboard');
   const [keresek, setKeresek] = useState<FelujitasKeres[]>([]);
+  const [feladatok, setFeladatok] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [munkasok, setMunkasok] = useState([
-    { id: 1, nev: "Kovács Elek", email: "elek@vityillo.hu", telefonszam: "123-456-7890", szak: "Festő" },
-    { id: 2, nev: "Szabó János", email: "janos@vityillo.hu", telefonszam: "098-765-4321", szak: "Burkoló" },
-    { id: 3, nev: "Nagy Lajos", email: "lajos@vityillo.hu", telefonszam: "555-123-4567", szak: "Vízvezetékszerelő" },
-    { id: 4, nev: "Kiss Pál", email: "pal@vityillo.hu", telefonszam: "987-654-3210", szak: "Villanyszerelő" },
-    { id: 5, nev: "Horváth Béla", email: "bela@vityillo.hu", telefonszam: "111-222-3333", szak: "Általános segéd" },
-    { id: 6, nev: "Tóth Gábor", email: "gabor@vityillo.hu", telefonszam: "444-555-6666", szak: "Festő" },
-    { id: 7, nev: "Varga Péter", email: "peter@vityillo.hu", telefonszam: "777-888-9999", szak: "Festő" },
-    { id: 8, nev: "Molnár Tamás", email: "tamas@vityillo.hu", telefonszam: "333-444-5555", szak: "Burkoló" },
-    { id: 9, nev: "Lukács András", email: "andras@vityillo.hu", telefonszam: "222-333-4444", szak: "Vízvezetékszerelő" },
-  ]);
+  const [munkasok, setMunkasok] = useState<any[]>([]);
+  const [workerError, setWorkerError] = useState<string>('');
+  const [workerLoading, setWorkerLoading] = useState(false);
+
+  // lekéri az adatbázisból azokat a felhasználókat, akik "szakember" szerepkörrel rendelkeznek
+  const fetchWorkers = async () => {
+    setWorkerError('');
+    setWorkerLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/admin/workers', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          throw new Error('Admin jogosultság szükséges.');
+        }
+        const text = await response.text();
+        throw new Error(text || 'Nem sikerült a munkások lekérése');
+      }
+      const data = await response.json();
+      console.log('munkások backendről:', data);
+      // biztonsági szűrés még egyszer: csak azok szerepeljenek, akik jogosultsága szakember
+      const szakemberek = data.filter((m: any) => m.jogosultsag === 'szakember');
+      setMunkasok(szakemberek);
+    } catch (err: any) {
+      console.error('fetchWorkers hiba:', err);
+      setWorkerError(err.message || 'Ismeretlen hiba');
+    } finally {
+      setWorkerLoading(false);
+    }
+  };
   
   const fetchKeresek = async () => {
     setLoading(true);
@@ -45,8 +67,14 @@ export default function AdminPage() {
     });
     const data = await response.json();
     setKeresek(data);
-  } catch(error){
-    console.error("Hiba az adatok lekérdezésekor:", error);
+      // alakítsuk át egyszerűbb beosztási objektummá
+      const transformed = data.map((k: FelujitasKeres) => ({
+        id: k.FelujitasId,
+        helyszin: k.HelyszinCim,
+        tipus: k.Leiras || '',
+        datum: k.LetrehozasDatuma ? new Date(k.LetrehozasDatuma).toLocaleDateString() : ''
+      }));
+      setFeladatok(transformed);
   } finally{
     setLoading(false);
   };
@@ -54,6 +82,9 @@ export default function AdminPage() {
   useEffect(() => {
     if (activeTab == 'kerelmek'){
       fetchKeresek();
+    }
+    if (activeTab === 'munkasok') {
+      fetchWorkers();
     }
   }, [activeTab])
 
@@ -95,11 +126,15 @@ export default function AdminPage() {
         )}
 
         {activeTab === 'beosztas' && (
-          <BeosztasKezelo munkasok={munkasok} />
+          <BeosztasKezelo munkasok={munkasok} feladatok={feladatok} />
         )}
 
         {activeTab === 'munkasok' && (
-          <MunkasKezelo munkasok={munkasok} setMunkasok={setMunkasok} />
+          <section>
+            {workerLoading && <p>Betöltés...</p>}
+            {workerError && <p style={{ color: 'red' }}>{workerError}</p>}
+            <MunkasKezelo munkasok={munkasok} setMunkasok={setMunkasok} />
+          </section>
         )}
 
   {activeTab === 'kerelmek' && (

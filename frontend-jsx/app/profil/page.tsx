@@ -1,36 +1,120 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function ProfilPage() {
-  // 1. DUMMY ADATOK - Ezt fogjuk később lecserélni a backendről jövő adatokra
-  const dummyUser = {
-    name: "Kovács János",
-    email: "janos.kovacs@example.com",
-    phone: "+36 30 123 4567",
-    password: "CSimicsanga67"
-  };
+  const router = useRouter();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [user, setUser] = useState(dummyUser);
-  const [formData, setFormData] = useState(dummyUser);
+  const [user, setUser] = useState({ name: '', email: '', phone: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', currentPassword: '', newPassword: '' });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const handleEditToggle = () => {
-    setFormData(user);
+    setFormData({ ...user, currentPassword: '', newPassword: '' });
+    setError('');
     setIsEditing(!isEditing);
   };
-
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setUser(formData);
-    setIsEditing(false);
-    console.log("Mentés a dummy adatbázisba:", formData);
+    setError('');
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
+    if (!formData.currentPassword) {
+      setError('A mentéshez add meg a jelenlegi jelszavad.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const rawUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const baseUrl = rawUrl.replace(/\/?$/, '');
+      const apiEndpoint = baseUrl.endsWith('/api') ? `${baseUrl}/auth/me` : `${baseUrl}/api/auth/me`;
+      const res = await fetch(apiEndpoint, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          currentPassword: formData.currentPassword,
+          newPassword: formData.newPassword
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || 'Hiba történt a mentés során.');
+        return;
+      }
+
+      setUser({ name: data.name, email: data.email, phone: data.phone });
+      setIsEditing(false);
+      setFormData({ ...formData, currentPassword: '', newPassword: '' });
+    } catch (err) {
+      console.error('Mentés hiba:', err);
+      setError('Szerverhiba: nem sikerült menteni.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleLogout = () => {
     localStorage.clear();
     window.location.href = "/login";
   }
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const rawUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const baseUrl = rawUrl.replace(/\/?$/, ''); // trim trailing slash
+      const apiEndpoint = baseUrl.endsWith('/api') ? `${baseUrl}/auth/me` : `${baseUrl}/api/auth/me`;
+      console.log('DEBUG API URL:', rawUrl, '-> using endpoint', apiEndpoint);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      try {
+        const res = await fetch(apiEndpoint, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.status === 401) {
+          localStorage.removeItem('token');
+          router.push('/login');
+          return;
+        }
+
+        if (!res.ok) {
+          const text = await res.text();
+          console.error('Profil fetch hiba:', res.status, text);
+          throw new Error('Nem sikerült a profil lekérdezése');
+        }
+
+        const data = await res.json();
+        setUser({ name: data.name || '', email: data.email || '', phone: data.phone || '' });
+        setFormData({ name: data.name || '', email: data.email || '', phone: data.phone || '', currentPassword: '', newPassword: '' });
+      } catch (err) {
+        console.error('Profil betöltési hiba:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [router]);
 
   return (
     <main className="main-wrapper" style={{ paddingTop: '100px' }}>
@@ -87,13 +171,24 @@ export default function ProfilPage() {
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                   />
                 </div>
-                 <div className="info-row">
-                  <div className="info-label">Jelszó:</div>
+                <div className="info-row">
+                  <div className="info-label">Jelenlegi jelszó:</div>
                   <input 
                     type="password" 
                     className="adasokmezo" 
-                    value={formData.password} 
-                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    value={formData.currentPassword} 
+                    onChange={(e) => setFormData({...formData, currentPassword: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div className="info-row">
+                  <div className="info-label">Új jelszó (opcionális):</div>
+                  <input 
+                    type="password" 
+                    className="adasokmezo" 
+                    value={formData.newPassword} 
+                    onChange={(e) => setFormData({...formData, newPassword: e.target.value})}
                   />
                 </div>
                 
