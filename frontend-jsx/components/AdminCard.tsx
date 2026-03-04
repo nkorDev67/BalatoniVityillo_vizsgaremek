@@ -3,19 +3,25 @@
 import { useState } from 'react';
 import styles from '../app/admin/admin.module.css'; // Vagy használd a Tailwind osztályokat
 
-// Típusdefiníció a TypeScript-hez
+interface Feladat {
+    Tipus: string;
+    Terulet: string;
+    Ar: number;
+}
 interface FelujitasKeres {
     FelujitasId: number;
     HelyszinCim: string;
     Leiras: string;
     Statusz: string;
     UgyfelNeve: string;
-    LetrehozasDatuma: string;
+    KezdesDatuma: string;
+    Feladatok?: Feladat[];
 }
  
 export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
     const [datum, setDatum] = useState("");
     const [betoltes, setBetoltes] = useState(false);
+    const [nyitva, setNyitva] = useState(false);
 
     const handleMentes = async () => {
         if (!datum) {
@@ -61,13 +67,41 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
             <div className={styles.body}>
                 <p><strong>Helyszín:</strong> {keres.HelyszinCim}</p>
                 <p><strong>Leírás:</strong> {keres.Leiras}</p>
-                <p className={styles.dateInfo}>Beérkezett: {new Date(keres.LetrehozasDatuma).toLocaleDateString('hu-HU')}</p>
+                <p className={styles.dateInfo}>
+                    Tervezett kezdés: {keres.KezdesDatuma ? new Date(keres.KezdesDatuma).toLocaleDateString('hu-HU') : 'Még nincs ütemezve'}
+                </p>
+
+                {/* Lenyíló gomb a feladatokhoz */}
+                <button 
+                    className={styles.detailsToggle} 
+                    onClick={() => setNyitva(!nyitva)}
+                >
+                    {nyitva ? '🔼 Részletek elrejtése' : '🔽 Feladatok megtekintése'}
+                </button>
+
+                {nyitva && (
+                    <div className={styles.taskList}>
+                        <h4>Kért munkálatok:</h4>
+                        {keres.Feladatok && keres.Feladatok.length > 0 ? (
+                            <ul>
+                                {keres.Feladatok.map((f, index) => (
+                                    <li key={index}>
+                                        {f.Tipus} - {f.Terulet} m² ({f.Ar.toLocaleString()} Ft)
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p>Nincsenek részletes feladatok megadva.</p>
+                        )}
+                    </div>
+                )}
+
+                
             </div>
 
             <div className={styles.footer}>
-                <label htmlFor={`date-${keres.FelujitasId}`}>Kezdés dátuma:</label>
+               <label>Kezdés dátuma:</label>
                 <input 
-                    id={`date-${keres.FelujitasId}`}
                     type="date" 
                     className={styles.dateInput}
                     value={datum}

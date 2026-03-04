@@ -56,35 +56,50 @@ export default function FelujitasKeresePage() {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+       const feladatokTomb = valasztottTipusok.map((tipus) => {
+        const option = tipusokOptions.find(o => o.value === tipus);
+        return {
 
-        const formData = {
-            lakasCim,
-            feladatTipusok: valasztottTipusok,
-            teruletPerTipus,
-            megjegyzes,
-            specifikaciok,
-            osszAr: calculateTotalPrice(),
+            tipus: specifikaciok[tipus] 
+                ? `${option?.label} (${specifikaciok[tipus]})` 
+                : (option?.label || tipus),
+            terulet: parseFloat(teruletPerTipus[tipus]) || 0,
+            ar: calculatePrice(tipus, teruletPerTipus[tipus] || '0')
         };
+    });
 
-        try {
-            const response = await fetch('/api/felujitas', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
-            });
-
-            if (response.ok) {
-                setUzenet('Felújítás kérés sikeresen elküldve!');
-                setLakasCim('');
-                setValasztottTipusok([]);
-                setTeruletPerTipus({});
-                setMegjegyzes('');
-                setSpecifikaciok({});
-            }
-        } catch (error) {
-            setUzenet('Hiba az adatküldés során!');
-        }
+    const payload = {
+        helyszinCim: lakasCim, 
+        leiras: megjegyzes,    
+        feladatok: feladatokTomb
     };
+    const token = localStorage.getItem("token");
+    try{
+        const response = await fetch('http://localhost:5000/api/felujitas/request', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            setUzenet('A felújítási kérés sikeresen elküldve!');
+           
+            setLakasCim('');
+            setValasztottTipusok([]);
+            setTeruletPerTipus({});
+            setMegjegyzes('');
+            setSpecifikaciok({});
+        } else {
+            const errorData = await response.json();
+            setUzenet(`Hiba: ${errorData.error || 'Szerver hiba'}`);
+        }
+    } catch (error) {
+        setUzenet('Hiba az adatküldés során! Ellenőrizd a szervert.');
+    }
+};
 
     return (
         <>

@@ -1,25 +1,43 @@
 const { poolPromise, sql } = require('../config/dbconfig');
 
-exports.getAllRequests = async (req, res) => {
+
+exports.getAllRequestsWithTasks = async (req, res) => {
     try {
         const pool = await poolPromise;
-        const result = await pool.request().query(`
+        
+        // 1. Lekérjük a fő kéréseket és a felhasználóneveket
+        const requestsResult = await pool.request().query(`
             SELECT 
                 f.FelujitasId, 
                 f.HelyszinCim, 
-                f.Statusz, 
                 f.Leiras, 
-                f.LetrehozasDatuma,
-                u.Felhasznalonev AS UgyfelNeve,
-                (SELECT SUM(Ar) FROM Feladat WHERE FelujitasId = f.FelujitasId) AS OsszAr
+                f.Statusz, 
+                f.KezdesDatuma,
+                u.Felhasznalonev AS UgyfelNeve
             FROM Felujitas f
             JOIN Felhasznalo u ON f.FelhasznaloId = u.FelhasznaloId
-            ORDER BY f.LetrehozasDatuma DESC
+
         `);
 
-        res.json(result.recordset);
+        // 2. Lekérjük az ÖSSZES feladatot
+        const tasksResult = await pool.request().query(`
+            SELECT FeladatId, FelujitasId, Tipus, Terulet, Ar 
+            FROM Feladat
+        `);
+
+        // 3. Összefésüljük a kettőt a kódban
+        const requests = requestsResult.recordset.map(keres => {
+            return {
+                ...keres,
+                // Kikeressük azokat a feladatokat, amik ehhez a kéréshez tartoznak
+                Feladatok: tasksResult.recordset.filter(t => t.FelujitasId === keres.FelujitasId)
+            };
+        });
+
+        res.json(requests);
     } catch (err) {
-        res.status(500).json({ error: "Hiba az adatok lekérésekor." });
+        console.error("SQL hiba:", err);
+        res.status(500).json({ error: "Nem sikerült lekérni a kérelmeket." });
     }
 };
 

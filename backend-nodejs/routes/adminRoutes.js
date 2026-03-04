@@ -8,5 +8,6 @@ router.get('/workers', authMiddleware.verifyToken, authMiddleware.isAdmin, admin
 router.post('/workers', authMiddleware.verifyToken, authMiddleware.isAdmin, adminController.addWorkerByEmail);
 // kirúgás / visszafokozás
 router.delete('/workers/:id', authMiddleware.verifyToken, authMiddleware.isAdmin, adminController.removeWorker);
+router.get('/requests', adminController.getAllRequestsWithTasks);
 
 module.exports = router;

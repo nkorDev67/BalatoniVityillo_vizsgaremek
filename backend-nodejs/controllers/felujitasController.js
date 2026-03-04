@@ -41,3 +41,21 @@ exports.createRequest = async (req, res) => {
 
     } 
 }
+exports.getAllRequests = async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .query(`
+                SELECT 
+                    f.FelujitasId, f.HelyszinCim, f.Statusz, f.KezdesDatuma, f.Leiras,
+                    u.Nev AS FelhasznaloNev,
+                    (SELECT SUM(Ar) FROM Feladat WHERE FelujitasId = f.FelujitasId) AS OsszAr
+                FROM Felujitas f
+                JOIN Felhasznalok u ON f.FelhasznaloId = u.FelhasznaloId
+                ORDER BY f.FelujitasId DESC
+            `);
+        res.json(result.recordset);
+    } catch (err) {
+        res.status(500).json({ error: "Hiba a listázásnál" });
+    }
+};
