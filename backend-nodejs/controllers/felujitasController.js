@@ -59,3 +59,23 @@ exports.getAllRequests = async (req, res) => {
         res.status(500).json({ error: "Hiba a listázásnál" });
     }
 };
+
+exports.getMyRequests = async (req, res) => {
+    try{
+        const userId = req.user.id;
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('userId', sql.Int, userId)
+            .query(`
+                SELECT FelujitasId, HelyszinCim, Leiras, Statusz, KezdesDatuma 
+                FROM Felujitas 
+                WHERE FelhasznaloId = @userId
+                ORDER BY KezdesDatuma DESC
+                `);
+        res.json(result.recordset);
+    }catch(err){
+        res.status(500).json({ error: err.message });
+    }
+            
+};
+

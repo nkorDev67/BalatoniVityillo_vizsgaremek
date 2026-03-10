@@ -10,4 +10,7 @@ router.post('/workers', authMiddleware.verifyToken, authMiddleware.isAdmin, admi
 router.delete('/workers/:id', authMiddleware.verifyToken, authMiddleware.isAdmin, adminController.removeWorker);
 router.get('/requests', adminController.getAllRequestsWithTasks);
 
+//Felujitaskárás mentés
+router.put('/update-status', authMiddleware.verifyToken, authMiddleware.isAdmin, adminController.updateStatus);
+
 module.exports = router;

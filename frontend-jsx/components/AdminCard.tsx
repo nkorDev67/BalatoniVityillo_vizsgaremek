@@ -57,6 +57,30 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
         }
     };
 
+    const handleBefejezes = async () => {
+        const response = await fetch('http://localhost:5000/api/admin/update-status', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+            felujitasId: keres.FelujitasId,
+            ujStatusz: 'Befejezve',
+            ujDatum: keres.KezdesDatuma
+        })
+    });
+
+    if (response.ok) {
+        alert("Projekt lezárva! Eltűnik az admin listából.");
+        window.location.reload(); 
+
+    }
+
+    }
+
+
+
     return (
         <div className={styles.card}>
             <div className={styles.header}>
@@ -114,6 +138,24 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
                 >
                     {betoltes ? 'Mentés...' : 'Időpont rögzítése'}
                 </button>
+                {keres.Statusz == 'Ütemezve' && (
+                    <button 
+                        className={styles.completeButton} 
+                        onClick={handleBefejezes}
+                        style={{
+                            backgroundColor: '#28a745',
+                            color: 'white',
+                            border: 'none',
+                            padding: '10px 15px',
+                            borderRadius: '5px',
+                            cursor: 'pointer',
+                            marginLeft: '10px',
+                            fontWeight: 'bold'
+                        }}
+                        >
+                        ✅ Projekt lezárása
+                        </button>
+                )}
             </div>
         </div>
     );

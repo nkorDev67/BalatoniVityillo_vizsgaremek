@@ -12,6 +12,7 @@ export default function ProfilPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [myRequests, setMyRequests] = useState<any[]>([]);
 
   const handleEditToggle = () => {
     setFormData({ ...user, currentPassword: '', newPassword: '' });
@@ -79,7 +80,7 @@ export default function ProfilPage() {
       const rawUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const baseUrl = rawUrl.replace(/\/?$/, ''); // trim trailing slash
       const apiEndpoint = baseUrl.endsWith('/api') ? `${baseUrl}/auth/me` : `${baseUrl}/api/auth/me`;
-      console.log('DEBUG API URL:', rawUrl, '-> using endpoint', apiEndpoint);
+      console.log('DEBUG API URL:', rawUrl, '-> using endpoint', apiEndpoint);     
       const token = localStorage.getItem('token');
       if (!token) {
         router.push('/login');
@@ -112,9 +113,26 @@ export default function ProfilPage() {
         setLoading(false);
       }
     };
+     const fetchMyRequests = async () => {
+    const token = localStorage.getItem('token');
+    try{
+      const res = await fetch('http://localhost:5000/api/felujitas/my-requests',{
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok){
+        const data = await res.json()
+        setMyRequests(data);
+      }
+    }catch(err){
+      console.error('Hiba történt a kérések lekérdezése során:', err);
+    }
+  };
+  fetchMyRequests();
+  fetchProfile();
+  }, [router] 
+ 
 
-    fetchProfile();
-  }, [router]);
+);
 
   return (
     <main className="main-wrapper" style={{ paddingTop: '100px' }}>
@@ -201,7 +219,50 @@ export default function ProfilPage() {
           </div>
         )}
 
-        {/* JOBB OLDAL: STATISZTIKA (szintén dummy adatokkal) */}
+          <div className="profile-card requests-card" style={{ gridColumn: '1 / -1', marginTop: '30px' }}>
+  <div className="profile-header">
+    <h3>🔨 Felújításaim állapota</h3>
+  </div>
+  <div className="profile-body">
+    {myRequests.length > 0 ? (
+      <div className="requests-list">
+        {myRequests.map((req) => (
+          <div key={req.FelujitasId} className="status-item">
+            <div className="status-info">
+              <span className="status-location">{req.HelyszinCim}</span>
+              <span className="status-desc">{req.Leiras}</span>
+            </div>
+            
+            <div className="status-badge-container">
+              {/* Dinamikus osztálynév a színekhez */}
+              <span className={`status-badge ${req.Statusz.toLowerCase()}`}>
+                {req.Statusz}
+              </span>
+              <small className="status-date">
+                {req.KezdesDatuma 
+                  ? `Kezdés: ${new Date(req.KezdesDatuma).toLocaleDateString('hu-HU')}` 
+                  : "Várakozás adminra..."}
+              </small>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div className="no-requests">
+        <p>Még nem küldtél be felújítási kérelmet.</p>
+        <button onClick={() => router.push('/ajanlatkeres')} className="btn-edit">Új kérés indítása</button>
+      </div>
+    )}
+  </div>
+</div>
+
+      </div>
+    
+    </main>
+  );
+}
+
+/*{/* JOBB OLDAL: STATISZTIKA (szintén dummy adatokkal) }
         <div className="profile-card stat-card">
           <div className="profile-header">
             <h4>Aktivitás</h4>
@@ -209,19 +270,11 @@ export default function ProfilPage() {
           <div className="profile-body">
             <ul className="stat-list">
               <li className="stat-item">
-                <span>Aktív Felújítások</span>
+                <span>Aktív bérlések</span>
                 <span className="stat-badge">2</span>
               </li>
               <li className="stat-item">
                 <span>Leadott hirdetések</span>
                 <span className="stat-badge">1</span>
               </li>
-             
-            </ul>
-          </div>
-        </div>
-
-      </div>
-    </main>
-  );
-}
+*/

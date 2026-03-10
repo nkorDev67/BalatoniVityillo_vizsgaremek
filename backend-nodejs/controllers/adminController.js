@@ -1,3 +1,4 @@
+const { pool } = require('mssql');
 const { poolPromise, sql } = require('../config/dbconfig');
 
 
@@ -15,7 +16,9 @@ exports.getAllRequestsWithTasks = async (req, res) => {
                 f.KezdesDatuma,
                 u.Felhasznalonev AS UgyfelNeve
             FROM Felujitas f
-            JOIN Felhasznalo u ON f.FelhasznaloId = u.FelhasznaloId
+            LEFT JOIN dbo.Felhasznalo u ON f.FelhasznaloId = u.FelhasznaloId
+            WHERE f.Statusz != 'Befejezve'
+            ORDER BY f.KezdesDatuma ASC
 
         `);
 
@@ -40,6 +43,27 @@ exports.getAllRequestsWithTasks = async (req, res) => {
         res.status(500).json({ error: "Nem sikerült lekérni a kérelmeket." });
     }
 };
+
+exports.updateStatus = async (req, res) => {
+    const {felujitasId, ujStatusz, ujDatum} = req.body;
+    try{
+        const pool = await poolPromise;
+        await pool.request()
+            .input('id', sql.Int, felujitasId)
+            .input('statusz', sql.NVarChar, ujStatusz)
+            .input('datum', sql.Date, ujDatum)
+            .query(`UPDATE Felujitas
+                SET Statusz = @statusz, KezdesDatuma = @datum 
+                WHERE FelujitasId = @id
+                `);
+                res.json({ message: 'Sikeres mentés!' });
+            }catch(err) {
+                res.status(500).json({ error: 'Hiba a státusz frissítésekor.' });
+    } 
+}
+
+
+
 
 // visszaadja azoknak a felhasználóknak az adatait, akik jelenleg szakemberként vannak megjelölve
 exports.getProfessionals = async (req, res) => {
