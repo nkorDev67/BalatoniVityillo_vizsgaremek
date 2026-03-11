@@ -319,6 +319,7 @@ margin-right: auto;
     justify-content: center;
     margin-top: 30px;
     margin-bottom: 50px;
+    
 }
 
 /* A profil kártyák alapstílusa (felülírja/kiterjeszti a sima .card-ot) */
@@ -589,11 +590,33 @@ margin-right: auto;
 .hidden {
     display: none;
 }
+
 .requests-list {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 10px;
 }
+.requests-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.requests-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.requests-list::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+.requests-list::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
 
 .status-item {
   display: flex;
