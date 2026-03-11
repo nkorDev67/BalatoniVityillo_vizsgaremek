@@ -219,7 +219,7 @@ export default function ProfilPage() {
           </div>
         )}
 
-          <div className="profile-card requests-card" style={{ gridColumn: '1 / -1', marginTop: '30px' }}>
+          <div className="profile-card requests-card" style={{ gridColumn: '1 / -1'}}>
   <div className="profile-header">
     <h3>🔨 Felújításaim állapota</h3>
   </div>
@@ -261,20 +261,3 @@ export default function ProfilPage() {
     </main>
   );
 }
-
-/*{/* JOBB OLDAL: STATISZTIKA (szintén dummy adatokkal) }
-        <div className="profile-card stat-card">
-          <div className="profile-header">
-            <h4>Aktivitás</h4>
-          </div>
-          <div className="profile-body">
-            <ul className="stat-list">
-              <li className="stat-item">
-                <span>Aktív bérlések</span>
-                <span className="stat-badge">2</span>
-              </li>
-              <li className="stat-item">
-                <span>Leadott hirdetések</span>
-                <span className="stat-badge">1</span>
-              </li>
-*/
