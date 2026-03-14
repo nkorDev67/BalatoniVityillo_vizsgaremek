@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from '../app/admin/admin.module.css';
 
 interface Munkas {
@@ -16,9 +16,50 @@ interface Feladat {
   datum: string;
 }
 
-export default function BeosztasKezelo({ munkasok, feladatok = [] }: { munkasok: Munkas[]; feladatok?: Feladat[] }) {
-  // Ebben az állapotban tároljuk, hogy melyik feladathoz (index) melyik munkásokat rendeltük hozzá
+export default function BeosztasKezelo() {
+  const [munkasok, setMunkasok] = useState<Munkas[]>([]);
+  const [feladatok, setFeladatok] = useState<Feladat[]>([]);
   const [kiosztasok, setKiosztasok] = useState<{ [key: number]: number[] }>({});
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = localStorage.getItem('token');
+      const headers = { 'Authorization': `Bearer ${token}` };
+
+      try {
+        // 1. Lekérjük a szakembereket a checkboxokhoz
+        const mRes = await fetch('http://localhost:5000/api/admin/workers', { headers });
+        const munkasAdatok = await mRes.json();
+        setMunkasok(munkasAdatok);
+
+        // 2. Lekérjük a feladatokat (amikben már ott vannak a mentett beosztások is)
+        const fRes = await fetch('http://localhost:5000/api/admin/tasks-to-assign', { headers });
+        const feladatAdatok = await fRes.json();
+        setFeladatok(feladatAdatok);
+
+        // 3. Összerakjuk a "kiosztasok" state-et a mentett adatok alapján
+        const kezdetiKiosztasok: { [key: number]: number[] } = {};
+
+        feladatAdatok.forEach((f: any) => {
+          // Csak akkor adjuk hozzá, ha van mentett munkás és az egy tömb
+          if (f.mentettMunkasok && Array.isArray(f.mentettMunkasok)) {
+            kezdetiKiosztasok[f.id] = f.mentettMunkasok;
+          } else {
+            // Ha nincs semmi, legyen egy üres tömb, hogy ne legyen undefined hiba
+            kezdetiKiosztasok[f.id] = [];
+          }
+        });
+
+        // 4. Frissítjük a state-et, így a checkboxok "be fognak ugrani" a helyükre
+        setKiosztasok(kezdetiKiosztasok);
+
+      } catch (err) {
+        console.error("Hiba az adatok betöltésekor:", err);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleMunkasValtoztatas = (feladatIndex: number, munkasId: number) => {
     setKiosztasok(prev => {
@@ -32,6 +73,35 @@ export default function BeosztasKezelo({ munkasok, feladatok = [] }: { munkasok:
       }
     });
   };
+
+  const handleMentes = async () => {
+  const token = localStorage.getItem('token');
+  
+  if (Object.keys(kiosztasok).length === 0) {
+    alert("Nincs kijelölve semmilyen beosztás!");
+    return;
+  }
+
+  try {
+    const res = await fetch('http://localhost:5000/api/admin/save-assignments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ kiosztasok })
+    });
+
+    if (res.ok) {
+      alert("Sikeres mentés!");
+    } else {
+      alert("Hiba történt a mentés során.");
+    }
+  } catch (err) {
+    console.error("Hiba:", err);
+    alert("Nem érhető el a szerver.");
+  }
+};
 
   return (
     <div>
@@ -59,7 +129,15 @@ export default function BeosztasKezelo({ munkasok, feladatok = [] }: { munkasok:
             <tr key={feladat.id || fi} className={styles.taskRow}>
               <td className={styles.taskCell}>{feladat.helyszin}</td>
               <td className={styles.taskCell}>{feladat.tipus}</td>
-              <td className={styles.taskCell}>{feladat.datum}</td>
+              <td className={styles.taskCell}>
+              {feladat.datum && feladat.datum !== 'Függőben' 
+                ? new Date(feladat.datum).toLocaleDateString('hu-HU', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                  })
+                : 'Nincs megadva'}
+            </td>
               <td className={styles.taskCell}>
                 <div style={{ 
                   maxHeight: '100px', 
@@ -98,9 +176,9 @@ export default function BeosztasKezelo({ munkasok, feladatok = [] }: { munkasok:
       </table>
       
       <div style={{ marginTop: '20px', textAlign: 'right' }}>
-        <button className="btn-save" onClick={() => console.log("Mentendő beosztások:", kiosztasok)}>
-          Beosztások Mentése
-        </button>
+       <button className="btn-save" onClick={handleMentes}>
+        Beosztások Mentése
+      </button>
       </div>
     </div>
   );

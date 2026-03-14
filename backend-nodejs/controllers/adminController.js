@@ -72,15 +72,14 @@ exports.getProfessionals = async (req, res) => {
         // csatlakozunk a Szakember táblához, hogy lássuk a szakmájukat is
         const result = await pool.request().query(`
             SELECT 
-                f.FelhasznaloId AS id, 
+                s.SzakemberId AS id, 
                 f.Felhasznalonev AS nev, 
                 f.Email AS email, 
                 f.TelefonSzam AS telefonszam,
                 f.Jogosultsag AS jogosultsag,
                 s.Szak AS szak
-            FROM Felhasznalo f
-            LEFT JOIN Szakember s ON s.FelhasznaloId = f.FelhasznaloId
-            WHERE f.Jogosultsag = 'szakember'
+            FROM Szakember s
+            JOIN Felhasznalo f ON s.FelhasznaloId = f.FelhasznaloId
         `);
         res.json(result.recordset);
     } catch (err) {
@@ -176,5 +175,90 @@ exports.removeWorker = async (req, res) => {
     } catch (err) {
         console.error('removeWorker hiba:', err);
         res.status(500).json({ error: 'Hiba történt a munkás visszafokozásakor.' });
+    }
+};
+
+exports.getTaskForAssigments = async (req, res) => {
+    try{
+        const pool = await poolPromise;
+
+        const result = await pool.request().query(`
+            SELECT
+                ft.FeladatId AS id,
+                f.HelyszinCim AS helyszin,
+                ft.Tipus AS tipus,
+                f.KezdesDatuma AS datum
+            FROM Feladat ft
+            JOIN Felujitas f ON ft.FelujitasId = f.FelujitasId
+            WHERE f.KezdesDatuma IS NOT NULL 
+            AND f.Statusz != 'Befejezve'
+        `);
+        const feladatok = result.recordset;
+
+        // minden feladathoz beosztottak lekérése
+        for (let f of feladatok) {
+            const beosztasRes = await pool.request()
+                .input('fId', sql.Int, f.id)
+                .query("SELECT SzakemberId FROM Munkakiosztas WHERE FeladatId = @fId");
+            
+            f.mentettMunkasok = beosztasRes.recordset.map(r => r.SzakemberId);
+        }
+
+        res.json(feladatok);
+    } catch (err) {
+        console.error("SQL Hiba:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+
+}
+
+exports.saveWorkAssignments = async (req, res) => {
+    const { kiosztasok } = req.body; 
+    
+    try {
+        const pool = await poolPromise;
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        try {
+            for (const feladatId in kiosztasok) {
+                const munkasok = kiosztasok[feladatId];
+
+                // 1. Lekérjük a dátumot a feladathoz egyszer (hogy ne a belső ciklusban kelljen)
+                const dateResult = await transaction.request()
+                    .input('fId', sql.Int, feladatId)
+                    .query(`
+                        SELECT TOP 1 f.KezdesDatuma 
+                        FROM Felujitas f 
+                        JOIN Feladat ft ON f.FelujitasId = ft.FelujitasId 
+                        WHERE ft.FeladatId = @fId
+                    `);
+                
+                const feladatDatuma = dateResult.recordset[0]?.KezdesDatuma;
+
+                for (const szakemberId of munkasok) {
+                    // 2. Beillesztés a Munkakiosztas táblába
+                    await transaction.request()
+                        .input('feladatId', sql.Int, feladatId)
+                        .input('szakemberId', sql.Int, szakemberId)
+                        .input('datum', sql.DateTime, feladatDatuma)
+                        .query(`
+                            IF NOT EXISTS (SELECT 1 FROM Munkakiosztas WHERE FeladatId = @feladatId AND SzakemberId = @szakemberId)
+                            BEGIN
+                                INSERT INTO Munkakiosztas (FeladatId, SzakemberId, Statusz, MunkaDatuma)
+                                VALUES (@feladatId, @szakemberId, 'Kiosztva', @datum)
+                            END
+                        `);
+                }
+            }
+            await transaction.commit();
+            res.json({ message: "Beosztások sikeresen mentve!" });
+        } catch (err) {
+            await transaction.rollback();
+            throw err;
+        }
+    } catch (err) {
+        console.error("Mentési hiba részletei:", err.message);
+        res.status(500).json({ error: "Szerver hiba a mentés során.", details: err.message });
     }
 };

@@ -75,9 +75,9 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    if (activeTab === 'kerelmek') fetchKeresek();
-    if (activeTab === 'munkasok') fetchWorkers();
-  }, [activeTab]);
+  if (activeTab === 'kerelmek' || activeTab === 'beosztas') fetchKeresek();
+  if (activeTab === 'munkasok' || activeTab === 'beosztas') fetchWorkers();
+}, [activeTab]);
 
   return (
     <main className={styles.adminWrapper}>
@@ -93,7 +93,7 @@ export default function AdminPage() {
 
       <section className={styles.content}>
         {activeTab === 'dashboard' && <ProfilPage />}
-        {activeTab === 'beosztas' && <BeosztasKezelo munkasok={munkasok} feladatok={feladatok} />}
+        {activeTab === 'beosztas' && <BeosztasKezelo />}
         {activeTab === 'munkasok' && (
           <section>
             {workerLoading && <p>Betöltés...</p>}

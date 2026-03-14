@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import styles from '../app/admin/admin.module.css'; // Vagy használd a Tailwind osztályokat
+import styles from '../app/admin/admin.module.css'; 
 
 interface Feladat {
     Tipus: string;
@@ -46,7 +46,7 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
 
             if (response.ok) {
                 alert("Sikeresen ütemezve!");
-                // Itt akár egy oldalfrissítést is nyomhatsz: window.location.reload();
+                
             } else {
                 alert("Hiba történt a mentés során.");
             }
