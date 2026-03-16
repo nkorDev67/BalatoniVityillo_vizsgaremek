@@ -57,7 +57,13 @@ export default function AdminPage() {
       const response = await fetch('http://localhost:5000/api/admin/requests', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      if (!response.ok) {
+        throw new Error(`Hiba a kérésben: ${response.status} ${response.statusText}`);
+      }
       const data = await response.json();
+      if (!Array.isArray(data)) {
+        throw new Error('A visszakapott adat nem tömb.');
+      }
       setKeresek(data);
       
       const transformed = data.map((k: FelujitasKeres) => ({

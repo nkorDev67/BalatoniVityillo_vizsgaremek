@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
 const authMiddleware = require('../middleware/authMiddleware');
-const { route } = require('./adminRoutes');
 
 // nur for admins
 router.get('/workers', authMiddleware.verifyToken, authMiddleware.isAdmin, adminController.getProfessionals);

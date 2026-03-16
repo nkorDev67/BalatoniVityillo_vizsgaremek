@@ -1,0 +1,12 @@
+const express = require('express');
+const router = express.Router();
+const beosztasController = require('../controllers/beosztasController');
+const { verifyToken } = require('../middleware/authMiddleware');
+
+// Az összes munka megjelenítése. A "AssignedToMe" mező jelzi, hogy az adott felhasználóhoz van-e rendelve.
+router.get('/assignments', beosztasController.getAssignments);
+
+// (További endpointok maradtak, pl. csak a saját beosztás lekérése)
+router.get('/my-assignments', verifyToken, beosztasController.getMyAssignments);
+
+module.exports = router;
