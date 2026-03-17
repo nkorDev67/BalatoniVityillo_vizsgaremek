@@ -358,6 +358,25 @@ margin-right: auto;
     padding: 25px;
 }
 
+/* Assignments grid: kártyák egymás mellett, törés sorra ha nincs hely */
+.assignments-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: flex-start;
+    align-items: stretch;
+}
+
+.assignment-card {
+    flex: 1 1 300px; /* alap: 300px, nő és csökken szükség szerint */
+    max-width: 360px;
+    min-width: 220px;
+}
+
+.assignment-card .card {
+    margin: 0; /* belső card már kapott árnyékot és szegélyt */
+}
+
 /* Profilkép kör alakú megjelenítése */
 .profile-img-container {
     text-align: center;

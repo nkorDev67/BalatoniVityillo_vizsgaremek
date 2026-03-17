@@ -43,8 +43,8 @@ export default function BeosztasPage() {
           return;
         }
 
-        // Beosztások lekérése (minden feladatot megjelenítünk, de csak a sajáthoz lehet cselekedni)
-        const assignmentsEndpoint = baseUrl.endsWith('/api') ? `${baseUrl}/beosztas/assignments` : `${baseUrl}/api/beosztas/assignments`;
+        // Beosztások lekérése: csak a bejelentkezett szakember saját beosztásai
+        const assignmentsEndpoint = baseUrl.endsWith('/api') ? `${baseUrl}/beosztas/my-assignments` : `${baseUrl}/api/beosztas/my-assignments`;
         const assignmentsRes = await fetch(assignmentsEndpoint, {
           method: 'GET',
           headers: {
@@ -68,6 +68,40 @@ export default function BeosztasPage() {
 
     fetchData();
   }, [router]);
+
+  const markFinished = async (assignment: any) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const rawUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const baseUrl = rawUrl.replace(/\/?$/, '');
+      const id = assignment.FeladatId ?? assignment.feladatId ?? assignment.FeladatID ?? assignment.id ?? assignment.feladat?.FeladatId ?? assignment.feladat?.feladatId;
+      console.log('markFinished called for assignment, resolved id=', id);
+      const endpoint = baseUrl.endsWith('/api') ? `${baseUrl}/beosztas/complete/${id}` : `${baseUrl}/api/beosztas/complete/${id}`;
+      console.log('Calling endpoint:', endpoint);
+      const res = await fetch(endpoint, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+      });
+      if (res.ok) {
+        setAssignments(prev => prev.filter(a => !( (a.FeladatId ?? a.feladatId) === (assignment.FeladatId ?? assignment.feladatId) )));
+      } else {
+        // próbáljuk kiolvasni json-t, ha van, különben sima szöveget
+        let bodyText = '';
+        try {
+          const json = await res.json();
+          bodyText = JSON.stringify(json);
+        } catch (e) {
+          try { bodyText = await res.text(); } catch (_) { bodyText = ''; }
+        }
+        const msg = `Hiba: ${res.status} ${res.statusText} ${bodyText}`;
+        console.error('complete assignment failed:', msg);
+        setError(msg);
+      }
+    } catch (err) {
+      setError('Hálózati hiba történt.');
+    }
+  };
 
   if (loading) {
     return (
@@ -97,49 +131,55 @@ export default function BeosztasPage() {
       
       <div id="beosztas-kontener">
         {user ? (
-          // MUNKÁS NÉZET (vagy felhasználó, akinek lehetnek munkái)
-          <div className="card shadow border-primary">
-            <div className="card-header bg-primary text-white p-3">
-              <h3 className="mb-0">Aktuális Beosztásod</h3>
+          <div>
+            <div className="mb-3">
+              <h3>Aktuális Beosztásod</h3>
+              <p>Üdvözöljük, <strong>{user.nev}</strong>! Az alábbi felújítási munkákra vagy beosztva:</p>
             </div>
-            <div className="card-body p-4">
-              <p>Üdvözöljük, <strong>{user.nev}</strong>! Az alábbi felújítási munkára vagy beosztva:</p>
-              <hr />
-              
-              {assignments.filter(a => a.AssignedToMe === 1).length > 0 ? assignments
-                .filter(a => a.AssignedToMe === 1)
-                .map((assignment, index) => (
-                  <div key={index} className="mb-3 p-3 bg-light rounded border-start border-4 border-success shadow-sm">
-                  <h4 className="text-success">{assignment.FeladatTipus}</h4>
-                  <p><strong>Helyszín:</strong> {assignment.HelyszinCim}</p>
-                  <p><strong>Leírás:</strong> {assignment.Leiras}</p>
-                  <p><strong>Státusz:</strong> {assignment.Statusz}</p>
-                  <div className="row">
-                    <div className="col-md-6">
-                      <p><strong>Munka dátuma:</strong><br /> {assignment.MunkaDatuma ? new Date(assignment.MunkaDatuma).toLocaleDateString('hu-HU') : 'Nincs megadva'}</p>
-                    </div>
-                    <div className="col-md-6">
-                      <p><strong>Kezdés dátuma:</strong><br /> {assignment.KezdesDatuma ? new Date(assignment.KezdesDatuma).toLocaleDateString('hu-HU') : 'Nincs megadva'}</p>
-                    </div>
-                  </div>
-                  <p><strong>Terület:</strong> {assignment.Terulet} m²</p>
-                  <p><strong>Ár:</strong> {assignment.Ar} Ft</p>
 
-                  <div className="mt-2">
-                    {assignment.AssignedToMe ? (
-                      <span className="badge bg-success">Hozzád rendelve</span>
-                    ) : (
-                      <span className="badge bg-secondary">Nem hozzád rendelve</span>
-                    )}
-                  </div>
-                </div>
-              )) : (
-                <p>Nincs aktív munkabeosztásod.</p>
-              )}
-            </div>
+            {assignments && assignments.length > 0 ? (
+              <div className="assignments-grid">
+                {assignments
+                  .filter((a) => {
+                    const status = (a.Statusz ?? a.statusz ?? '').toString().trim().toLowerCase();
+                    return status !== 'befejezve';
+                  })
+                  .map((assignment, index) => (
+                    <div key={index} className="assignment-card">
+                      <div className="card h-100 shadow-sm">
+                        <div className="card-body">
+                          <h5 className="card-title text-primary">{assignment.FeladatTipus}</h5>
+                          <p className="card-text"><strong>Helyszín:</strong> {assignment.HelyszinCim}</p>
+                          <p className="card-text"><strong>Leírás:</strong> {assignment.Leiras}</p>
+                          <p className="card-text"><strong>Státusz:</strong> {assignment.Statusz}</p>
+                          <div className="row">
+                            <div className="col-6">
+                              <p className="mb-0"><strong>Munka dátuma:</strong></p>
+                              <p className="small">{assignment.MunkaDatuma ? new Date(assignment.MunkaDatuma).toLocaleDateString('hu-HU') : 'Nincs megadva'}</p>
+                            </div>
+                            <div className="col-6">
+                              <p className="mb-0"><strong>Kezdés:</strong></p>
+                              <p className="small">{assignment.KezdesDatuma ? new Date(assignment.KezdesDatuma).toLocaleDateString('hu-HU') : 'Nincs megadva'}</p>
+                            </div>
+                          </div>
+                          <p className="mt-2 mb-1"><strong>Terület:</strong> {assignment.Terulet} m²</p>
+                          <p className="mb-2"><strong>Ár:</strong> {assignment.Ar} Ft</p>
+                        </div>
+                        <div className="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                          <span className="badge bg-success">Hozzád rendelve</span>
+                          {((assignment.Statusz ?? assignment.statusz) || '').toString().trim().toLowerCase() !== 'befejezve' && (
+                            <button className="btn btn-sm btn-outline-success" onClick={() => markFinished(assignment)}>Befejezés</button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                ))}
+              </div>
+            ) : (
+              <div className="alert alert-secondary">Nincs aktív munkabeosztásod.</div>
+            )}
           </div>
         ) : (
-          // ÜGYFÉL / EGYÉB NÉZET
           <div className="alert alert-info text-center p-5">
             <h3 className="font-bold text-xl">Nincs aktív munkabeosztásod.</h3>
             <p>Ez az oldal csak munkatársaink számára érhető el.</p>

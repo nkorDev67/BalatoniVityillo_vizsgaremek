@@ -8,5 +8,8 @@ router.get('/assignments', beosztasController.getAssignments);
 
 // (További endpointok maradtak, pl. csak a saját beosztás lekérése)
 router.get('/my-assignments', verifyToken, beosztasController.getMyAssignments);
+router.get('/my-tasks', verifyToken, beosztasController.getMyTasks);
+// Szakember jelöli késznek a saját kiosztását
+router.patch('/complete/:feladatId', verifyToken, beosztasController.completeAssignment);
 
 module.exports = router;
