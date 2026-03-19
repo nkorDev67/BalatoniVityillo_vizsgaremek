@@ -53,7 +53,6 @@ export default function AdminPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      // FONTOS: Az URL-nek egyeznie kell a backenddel (api/admin/requests)
       const response = await fetch('http://localhost:5000/api/admin/requests', {
         headers: { 'Authorization': `Bearer ${token}` }
       });

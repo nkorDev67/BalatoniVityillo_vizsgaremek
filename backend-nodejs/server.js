@@ -70,20 +70,7 @@ app.get('/test', (req, res) => res.send('ok'));
 
 const PORT = process.env.PORT || 5000
 
-// Debug: Milyen útvonalak vannak regisztrálva?
 app.listen(PORT, () => {
   console.log(`Server fut: http://localhost:${PORT}`);
-
-  if (app._router && Array.isArray(app._router.stack)) {
-    console.log('Regisztrált útvonalak:');
-    app._router.stack.forEach((layer) => {
-      if (layer.route && layer.route.path) {
-        const methods = Object.keys(layer.route.methods).join(',').toUpperCase();
-        console.log(` - ${methods} ${layer.route.path}`);
-      }
-    });
-  } else {
-    console.log('Nem található regisztrált útvonal stack.');
-  }
 });
 

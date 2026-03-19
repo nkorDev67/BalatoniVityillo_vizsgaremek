@@ -82,7 +82,7 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
 
 
     return (
-        <div className={styles.card}>
+        <div className="card">
             <div className={styles.header}>
                 <h3>{keres.UgyfelNeve}</h3>
                 <span className={styles.statusBadge}>{keres.Statusz}</span>
@@ -94,8 +94,6 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
                 <p className={styles.dateInfo}>
                     Tervezett kezdés: {keres.KezdesDatuma ? new Date(keres.KezdesDatuma).toLocaleDateString('hu-HU') : 'Még nincs ütemezve'}
                 </p>
-
-                {/* Lenyíló gomb a feladatokhoz */}
                 <button 
                     className={styles.detailsToggle} 
                     onClick={() => setNyitva(!nyitva)}
@@ -149,10 +147,8 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
                             padding: '10px 15px',
                             borderRadius: '5px',
                             cursor: 'pointer',
-                            marginLeft: '10px',
                             fontWeight: 'bold'
-                        }}
-                        >
+                        }}>
                         ✅ Projekt lezárása
                         </button>
                 )}
