@@ -185,6 +185,7 @@ margin-right: auto;
     border: 2px solid #d4a574;
     border-radius: 12px;
     padding: 20px;
+    height: 100%;
     margin: 20px 0;
     background-color: #fff;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -611,10 +612,6 @@ margin-right: auto;
   font-size: 1.1rem;
 }
 
-.status-desc {
-  color: #777;
-  font-size: 0.9rem;
-}
 
 /* Status Badges */
 .status-badge {

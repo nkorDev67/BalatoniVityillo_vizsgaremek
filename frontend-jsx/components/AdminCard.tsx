@@ -90,7 +90,12 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
             
             <div className={styles.body}>
                 <p><strong>Helyszín:</strong> {keres.HelyszinCim}</p>
-                <p><strong>Leírás:</strong> {keres.Leiras}</p>
+              <div className={styles.descriptionContainer}>
+                 <strong>Leírás:</strong> 
+                <p style={{ margin: '5px 0 0 0', whiteSpace: 'pre-wrap' }}>
+                    {keres.Leiras}
+                </p>
+                 </div>
                 <p className={styles.dateInfo}>
                     Tervezett kezdés: {keres.KezdesDatuma ? new Date(keres.KezdesDatuma).toLocaleDateString('hu-HU') : 'Még nincs ütemezve'}
                 </p>

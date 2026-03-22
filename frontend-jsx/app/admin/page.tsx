@@ -110,7 +110,7 @@ export default function AdminPage() {
           <section>
             <h1 className="mb-4">Beérkező felújítási kérelmek</h1>
             {loading ? <p>Betöltés...</p> : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px', alignItems: 'start'}}>
                 {keresek.length > 0 ? keresek.map((k) => <AdminCard key={k.FelujitasId} keres={k} />) : <p>Nincs megjeleníthető kérelem.</p>}
               </div>
             )}

@@ -178,6 +178,19 @@
     border-collapse: separate;
     border-spacing: 0 10px; 
 }
+.taskList {
+  height: 150px;       /* Minden kártyán ugyanakkora helyet foglal le */
+  overflow-y: auto;    /* Görgethető belül */
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 5px;
+}
+.footer {
+  margin-top: auto; 
+  padding: 15px;
+  border-top: 1px solid #eee;
+}
 
 .taskRow {
     background-color: white;
@@ -244,4 +257,33 @@
 
 .saveButton:disabled {
     background-color: #9ca3af;
+}
+.descriptionContainer {
+  height: 120px;
+  max-height: 150px; 
+  overflow-y: auto;        /* Függőleges görgetés engedélyezése */
+  overflow-x: hidden;      /* Vízszintes görgetés tiltása */
+  
+  /* --- A hiba javítása: --- */
+  white-space: pre-wrap;   /* Megtartja a sortöréseket, de tördeli a hosszú sorokat */
+  word-break: break-word;  /* Ha egy szó túl hosszú (pl. egy link), akkor is eltöri */
+  overflow-wrap: break-word; /* Biztonsági tartalék a tördeléshez */
+  /* ------------------------ */
+
+  background-color: #f8f9fa;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  margin: 10px 0;
+  line-height: 1.5;
+  text-align: left;        /* Biztosítsuk a balra igazítást */
+}
+
+/* Chrome/Safari görgetősáv design */
+.descriptionContainer::-webkit-scrollbar {
+  width: 6px;
+}
+.descriptionContainer::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 10px;
 }

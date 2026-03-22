@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import styles from './profil.module.css';
+
 
 export default function ProfilPage() {
   const router = useRouter();
@@ -13,6 +15,10 @@ export default function ProfilPage() {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [myRequests, setMyRequests] = useState<any[]>([]);
+  const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
+  const [workers, setWorkers] = useState<any[]>([]);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+
 
   const handleEditToggle = () => {
     setFormData({ ...user, currentPassword: '', newPassword: '' });
@@ -74,6 +80,27 @@ export default function ProfilPage() {
     localStorage.clear();
     window.location.href = "/login";
   }
+    //felujitaskerelem Modal függvény
+  const handleOpenDetails = async (request: any) => {
+    setSelectedRequest(request)
+    setWorkers([])
+    setDetailsLoading(true)
+
+    const token = localStorage.getItem('token')
+    try{
+      const res = await fetch(`http://localhost:5000/api/felujitas/details/${request.FelujitasId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if(res.ok){
+        const data = await res.json()
+        setWorkers(data.munkasok || [])
+      }
+    } catch (err) {
+      console.error('Hiba történt a részletek lekérdezése során:', err);
+    } finally {
+      setDetailsLoading(false);
+    }
+  }
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -130,9 +157,10 @@ export default function ProfilPage() {
   fetchMyRequests();
   fetchProfile();
   }, [router] 
- 
 
 );
+
+
 
   return (
     <main className="main-wrapper" style={{ paddingTop: '100px' }}>
@@ -227,10 +255,10 @@ export default function ProfilPage() {
     {myRequests.length > 0 ? (
       <div className="requests-list">
         {myRequests.map((req) => (
-          <div key={req.FelujitasId} className="status-item">
+          <div key={req.FelujitasId} className="status-item clickable" onClick={() => handleOpenDetails(req) } style={{cursor: 'pointer'}}>
             <div className="status-info">
               <span className="status-location">{req.HelyszinCim}</span>
-              <span className="status-desc">{req.Leiras}</span>
+              <span className={styles.statusDesc}>{req.Leiras}</span>
             </div>
             
             <div className="status-badge-container">
@@ -253,11 +281,50 @@ export default function ProfilPage() {
         <button onClick={() => router.push('/ajanlatkeres')} className="btn-edit">Új kérés indítása</button>
       </div>
     )}
+    </div>
   </div>
-</div>
 
-      </div>
-    
+</div>
+    {selectedRequest && (
+        <div className={styles.modalOverlay} onClick={() => setSelectedRequest(null)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <button className={styles.modalClose} onClick={() => setSelectedRequest(null)}>×</button>
+            
+            <h2 className={styles.modalTitle}>Részletek: {selectedRequest.HelyszinCim}</h2>
+            
+            <div className={styles.modalInfoGrid}>
+              <p><strong>Státusz:</strong> <span className={`status-badge ${selectedRequest.Statusz.toLowerCase()}`}>{selectedRequest.Statusz}</span></p>
+              <p ><strong>Leírás:</strong> {selectedRequest.Leiras}</p>
+              <p><strong>Kezdés:</strong> {selectedRequest.KezdesDatuma ? new Date(selectedRequest.KezdesDatuma).toLocaleDateString('hu-HU') : 'Várható...'}</p>
+            </div>
+
+            <hr className={styles.modalDivider} />
+            
+            <h3>👷 Beosztott szakemberek</h3>
+            {detailsLoading ? (
+              <p>Betöltés...</p>
+            ) : workers.length > 0 ? (
+              <div className={styles.workerList}>
+                {workers.map((m, idx) => (
+                  <div key={idx} className={styles.workerDetailCard}>
+                    <span className={styles.workerName}>👤 {m.Felhasznalonev}</span>
+                    <a href={`tel:${m.Telefonszam}`} className={styles.workerPhone}>📞 {m.Telefonszam}</a>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className={styles.noWorkersMsg}>
+                {selectedRequest.Statusz === 'Függőben' 
+                  ? "Hamarosan beosztjuk a szakembereket." 
+                  : "Nincsenek beosztott munkások."}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+ 
+
+
     </main>
   );
 }

@@ -79,3 +79,24 @@ exports.getMyRequests = async (req, res) => {
             
 };
 
+exports.getRequestDetails = async (req, res) => {
+    try{
+        const pool = await poolPromise;
+        const result = await pool.request()
+        .input('felujitasId', sql.Int, req.params.id)
+        .query(`SELECT
+                f.Felhasznalonev, 
+                f.Telefonszam
+                FROM Munkakiosztas mk
+                INNER JOIN Feladat ft ON mk.FeladatId = ft.FeladatId
+                INNER JOIN Szakember sz ON mk.SzakemberId = sz.SzakemberId
+                INNER JOIN Felhasznalo f ON sz.FelhasznaloId = f.FelhasznaloId
+                WHERE ft.FelujitasId = @felujitasId
+        `);
+
+        res.json({ munkasok: result.recordset});
+    }catch (err){
+        res.status(500).json({error: err.massage})
+    }
+}
+
