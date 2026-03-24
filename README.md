@@ -2,5 +2,5 @@ Ez a Balatoni Vityilló Vizsgaremek repositorija
 
 
 Csapattagok:
-Hegedüs Ádám
+Hegedüs Ádám,
 Nyitrai Kornél Márk
