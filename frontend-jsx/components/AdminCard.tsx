@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import styles from '../app/admin/admin.module.css'; 
+import { API_UTAK, apiVegpont } from '@/lib/utvonalak';
 
 interface Feladat {
     Tipus: string;
@@ -31,7 +32,7 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
 
         setBetoltes(true);
         try {
-            const response = await fetch('http://localhost:5000/api/admin/update-status', {
+            const response = await fetch(apiVegpont(API_UTAK.adminisztracio.statuszFrissites), {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -58,7 +59,7 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
     };
 
     const handleBefejezes = async () => {
-        const response = await fetch('http://localhost:5000/api/admin/update-status', {
+        const response = await fetch(apiVegpont(API_UTAK.adminisztracio.statuszFrissites), {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -82,7 +83,7 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
 
 
     return (
-        <div className="card">
+        <div className={styles.requestCard}>
             <div className={styles.header}>
                 <h3>{keres.UgyfelNeve}</h3>
                 <span className={styles.statusBadge}>{keres.Statusz}</span>
@@ -103,7 +104,7 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
                     className={styles.detailsToggle} 
                     onClick={() => setNyitva(!nyitva)}
                 >
-                    {nyitva ? '🔼 Részletek elrejtése' : '🔽 Feladatok megtekintése'}
+                    {nyitva ? 'Részletek elrejtése' : 'Feladatok megtekintése'}
                 </button>
 
                 {nyitva && (
@@ -144,17 +145,8 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
                 {keres.Statusz == 'Ütemezve' && (
                     <button 
                         className={styles.completeButton} 
-                        onClick={handleBefejezes}
-                        style={{
-                            backgroundColor: '#28a745',
-                            color: 'white',
-                            border: 'none',
-                            padding: '10px 15px',
-                            borderRadius: '5px',
-                            cursor: 'pointer',
-                            fontWeight: 'bold'
-                        }}>
-                        ✅ Projekt lezárása
+                        onClick={handleBefejezes}>
+                        Projekt lezárása
                         </button>
                 )}
             </div>

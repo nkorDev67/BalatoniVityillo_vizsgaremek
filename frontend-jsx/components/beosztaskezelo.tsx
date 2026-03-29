@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import styles from '../app/admin/admin.module.css';
+import { API_UTAK, apiVegpont } from '@/lib/utvonalak';
 
 interface Munkas {
   id: number;
@@ -28,12 +29,12 @@ export default function BeosztasKezelo() {
 
       try {
         // 1. Lekérjük a szakembereket a checkboxokhoz
-        const mRes = await fetch('http://localhost:5000/api/admin/workers', { headers });
+        const mRes = await fetch(apiVegpont(API_UTAK.adminisztracio.munkasok), { headers });
         const munkasAdatok = await mRes.json();
         setMunkasok(munkasAdatok);
 
         // 2. Lekérjük a feladatokat (amikben már ott vannak a mentett beosztások is)
-        const fRes = await fetch('http://localhost:5000/api/admin/tasks-to-assign', { headers });
+        const fRes = await fetch(apiVegpont(API_UTAK.adminisztracio.feladatokKiosztashoz), { headers });
         const feladatAdatok = await fRes.json();
         setFeladatok(feladatAdatok);
 
@@ -83,7 +84,7 @@ export default function BeosztasKezelo() {
   }
 
   try {
-    const res = await fetch('http://localhost:5000/api/admin/save-assignments', {
+    const res = await fetch(apiVegpont(API_UTAK.adminisztracio.beosztasokMentese), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -105,11 +106,18 @@ export default function BeosztasKezelo() {
 
   return (
     <div>
-      <h1>Napi Beosztások Készítése</h1>
+      <div className={styles.sectionHeader}>
+        <div className={styles.sectionTitleGroup}>
+          <span className={styles.sectionEyebrow}>Napi tervezés</span>
+          <h2 className={styles.sectionTitle}>Beosztások készítése</h2>
+          <p className={styles.sectionDescription}>Minden jóváhagyott feladathoz több szakember is rendelhető, a kijelölések pedig egyben menthetők.</p>
+        </div>
+      </div>
       
+      <div className={styles.tableWrap}>
       <table className={styles.beosztasTable}>
         <thead>
-          <tr style={{ textAlign: 'left', color: '#1d0909', fontSize: '14px' }}>
+          <tr>
             <th className={styles.taskCell}>Helyszín / Lakás</th>
             <th className={styles.taskCell}>Munka Típusa</th>
             <th className={styles.taskCell}>Dátum</th>
@@ -139,16 +147,9 @@ export default function BeosztasKezelo() {
                 : 'Nincs megadva'}
             </td>
               <td className={styles.taskCell}>
-                <div style={{ 
-                  maxHeight: '100px', 
-                  overflowY: 'auto', 
-                  border: '1px solid #ccc', 
-                  padding: '5px',
-                  borderRadius: '4px',
-                  background: '#fff'
-                }}>
+                <div className={styles.checkboxList}>
                   {munkasok.map(m => (
-                    <div key={m.id} style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <div key={m.id} className={styles.checkboxRow}>
                       <input 
                         type="checkbox" 
                         id={`m-${feladat.id}-${m.id}`}
@@ -159,7 +160,7 @@ export default function BeosztasKezelo() {
                     </div>
                   ))}
                 </div>
-                <small style={{ color: '#666' }}>
+                <small className={styles.selectionNote}>
                   Kijelölve: {kiosztasok[feladat.id]?.length || 0} fő
                 </small>
               </td>
@@ -174,9 +175,10 @@ export default function BeosztasKezelo() {
           ))}
         </tbody>
       </table>
+      </div>
       
-      <div style={{ marginTop: '20px', textAlign: 'right' }}>
-       <button className="btn-save" onClick={handleMentes}>
+      <div className={styles.buttonRow}>
+       <button className={styles.primaryAction} onClick={handleMentes}>
         Beosztások Mentése
       </button>
       </div>

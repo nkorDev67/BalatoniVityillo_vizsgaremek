@@ -1,8 +1,12 @@
 "use client";
 
 import { useState } from 'react';
+import styles from './felujitaskeres.module.css';
+import { API_UTAK, apiVegpont } from '@/lib/utvonalak';
+import { useRouteGuard } from '@/lib/jogosultsagOr';
 
 export default function FelujitasKeresePage() {
+    const { allowed, checking } = useRouteGuard(['felhasznalo']);
     const [lakasCim, setLakasCim] = useState('');
     const [feladatTipus, setFeladatTipus] = useState('');
     const [valasztottTipusok, setValasztottTipusok] = useState<string[]>([]);
@@ -56,7 +60,11 @@ export default function FelujitasKeresePage() {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-       const feladatokTomb = valasztottTipusok.map((tipus) => {
+        if (!allowed) {
+            return;
+        }
+
+        const feladatokTomb = valasztottTipusok.map((tipus) => {
         const option = tipusokOptions.find(o => o.value === tipus);
         return {
 
@@ -74,8 +82,8 @@ export default function FelujitasKeresePage() {
         feladatok: feladatokTomb
     };
     const token = localStorage.getItem("token");
-    try{
-        const response = await fetch('http://localhost:5000/api/felujitas/request', {
+    try {
+        const response = await fetch(apiVegpont(API_UTAK.felujitas.keres), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -99,14 +107,27 @@ export default function FelujitasKeresePage() {
     } catch (error) {
         setUzenet('Hiba az adatküldés során! Ellenőrizd a szervert.');
     }
-};
+    };
+
+    if (checking || !allowed) {
+        return null;
+    }
 
     return (
-        <>
-            <main className="felujitas-main">
-                <h1>Felújítás kérése</h1>
-                <form onSubmit={handleSubmit} id="felujitasForm">
-                    <label htmlFor="lakasCim">Lakás címe:</label>
+        <main className={styles.pageShell}>
+            <section className={styles.heroPanel}>
+                <span className={styles.eyebrow}>Árajánlat és felmérés</span>
+                <h1 className={styles.title}>Felújítás kérése</h1>
+                <p className={styles.subtitle}>
+                    Itt tudod elindítani az ajánlatkérést. Minden mezőt ugyanabban a letisztult stílusban tartottam,
+                    hogy a profil oldalhoz hasonlóan ez a felület is egységesen nézzen ki.
+                </p>
+            </section>
+
+            <form onSubmit={handleSubmit} id="felujitasForm" className={styles.formPanel}>
+                <div className={styles.formGrid}>
+                    <div className={styles.fieldGroup}>
+                        <label htmlFor="lakasCim" className={styles.fieldLabel}>Lakás címe</label>
                     <input
                         type="text"
                         id="lakasCim"
@@ -114,15 +135,19 @@ export default function FelujitasKeresePage() {
                         placeholder="Írd be a címet"
                         value={lakasCim}
                         onChange={(e) => setLakasCim(e.target.value)}
+                        className={styles.textInput}
                         required
                     />
+                    </div>
 
-                    <label htmlFor="feladatTipus">Feladat típusa:</label>
+                    <div className={styles.fieldGroup}>
+                    <label htmlFor="feladatTipus" className={styles.fieldLabel}>Feladat típusa</label>
                     <select
                         id="feladatTipus"
                         name="feladatTipus"
                         value={feladatTipus}
                         onChange={handleTipusChange}
+                        className={styles.selectInput}
                     >
                         <option value="">Válassz egy típust</option>
                         {tipusokOptions.map((option) => (
@@ -131,25 +156,34 @@ export default function FelujitasKeresePage() {
                             </option>
                         ))}
                     </select>
+                    </div>
+                </div>
 
-                    {valasztottTipusok.length > 0 && (
-                        <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
-                            <h3>Kiválasztott feladatok:</h3>
+                {valasztottTipusok.length > 0 && (
+                    <section className={styles.selectedPanel}>
+                        <div className={styles.selectedHeading}>
+                            <div>
+                                <h2 className={styles.selectedTitle}>Kiválasztott feladatok</h2>
+                                <p className={styles.selectedSubtitle}>Minden feladathoz itt tudsz területet és részletezést adni.</p>
+                            </div>
+                        </div>
+                        <div className={styles.taskList}>
                             {valasztottTipusok.map((tipus) => {
                                 const option = tipusokOptions.find(o => o.value === tipus);
                                 const tipusAr = calculatePrice(tipus, teruletPerTipus[tipus] || '0');
                                 return (
-                                    <div key={tipus} style={{ marginBottom: '15px', paddingBottom: '15px', borderBottom: '1px solid #ddd' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                                            <span><strong>{option?.label}</strong></span>
+                                    <div key={tipus} className={styles.taskRow}>
+                                        <div className={styles.taskHeader}>
+                                            <span className={styles.taskTitle}>{option?.label}</span>
                                             <button
                                                 type="button"
                                                 onClick={() => removeTipus(tipus)}
-                                                style={{ cursor: 'pointer', background: 'none', border: 'none', fontSize: '18px' }}
+                                                className={styles.removeButton}
                                             >
-                                                ×
+                                                Eltávolítás
                                             </button>
                                         </div>
+                                        <div className={styles.taskFields}>
                                         <input
                                             type="number"
                                             placeholder="Terület (m²)"
@@ -158,7 +192,7 @@ export default function FelujitasKeresePage() {
                                                 ...teruletPerTipus,
                                                 [tipus]: e.target.value
                                             })}
-                                            style={{ width: '100%', marginBottom: '10px', padding: '8px' }}
+                                            className={styles.numberInput}
                                             required
                                         />
                                         {needsSpecification(tipus) && (
@@ -170,36 +204,41 @@ export default function FelujitasKeresePage() {
                                                     ...specifikaciok,
                                                     [tipus]: e.target.value
                                                 })}
-                                                style={{ width: '100%', marginBottom: '10px', padding: '8px' }}
+                                                className={styles.specInput}
                                                 required
                                             />
                                         )}
-                                        <div style={{ backgroundColor: '#fff', padding: '8px', borderRadius: '4px', textAlign: 'right' }}>
-                                            <strong>{tipusAr.toLocaleString('hu-HU')} Ft</strong>
+                                        </div>
+                                        <div className={styles.priceTag}>
+                                            {tipusAr.toLocaleString('hu-HU')} Ft
                                         </div>
                                     </div>
                                 );
                             })}
-                            <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#e8f5e9', borderRadius: '4px', textAlign: 'right' }}>
-                                <h3 style={{ margin: '0', fontSize: '12px' }}>(adminisztrációs feldolgozás után az ár érték változhat)</h3>
-                                <h3 style={{ margin: '0' }}>Összesen: <span style={{ color: '#2e7d32' }}>{calculateTotalPrice().toLocaleString('hu-HU')} Ft / m²</span></h3>
-                            </div>
                         </div>
-                    )}
+                        <div className={styles.priceSummary}>
+                            <p className={styles.priceNotice}>Adminisztrációs feldolgozás után a végleges ár változhat.</p>
+                            <strong className={styles.priceTotal}>Összesen: {calculateTotalPrice().toLocaleString('hu-HU')} Ft</strong>
+                        </div>
+                    </section>
+                )}
 
-                    <label htmlFor="megjegyzes">Megjegyzés:</label>
+                <div className={styles.fieldGroup}>
+                    <label htmlFor="megjegyzes" className={styles.fieldLabel}>Megjegyzés</label>
                     <textarea
                         id="megjegyzes"
                         name="megjegyzes"
                         placeholder="Részletezd a kérést"
                         value={megjegyzes}
                         onChange={(e) => setMegjegyzes(e.target.value)}
+                        className={styles.textareaInput}
                     />
+                </div>
 
-                    <button type="submit">Kérés elküldése</button>
-                </form>
-                <div id="uzenet">{uzenet}</div>
-            </main>
-        </>
+                <button type="submit" className={styles.submitButton}>Kérés elküldése</button>
+            </form>
+
+            {uzenet ? <div id="uzenet" className={styles.messageBox}>{uzenet}</div> : null}
+        </main>
     );
 }

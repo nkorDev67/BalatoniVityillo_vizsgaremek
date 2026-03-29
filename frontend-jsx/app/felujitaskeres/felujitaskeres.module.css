@@ -1,0 +1,236 @@
+.pageShell {
+  width: min(980px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 34px 0 72px;
+}
+
+.heroPanel,
+.formPanel,
+.selectedPanel,
+.taskRow,
+.priceSummary,
+.messageBox {
+  border: 1px solid rgba(36, 36, 36, 0.12);
+  background: rgba(247, 247, 245, 0.94);
+  box-shadow: 0 22px 48px rgba(22, 22, 22, 0.08);
+}
+
+.heroPanel,
+.formPanel,
+.selectedPanel,
+.messageBox {
+  border-radius: 28px;
+}
+
+.heroPanel,
+.formPanel,
+.selectedPanel {
+  padding: 28px;
+}
+
+.heroPanel {
+  margin-bottom: 20px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(36, 36, 36, 0.14);
+  background: rgba(24, 24, 24, 0.04);
+  color: #3a3a3a;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.74rem;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  line-height: 1.04;
+  color: #1f1f1f;
+}
+
+.subtitle {
+  max-width: 60ch;
+  margin-top: 14px;
+  color: #595959;
+  line-height: 1.7;
+}
+
+.formPanel {
+  display: grid;
+  gap: 20px;
+}
+
+.formGrid {
+  display: grid;
+  gap: 18px;
+}
+
+.fieldGroup {
+  display: grid;
+  gap: 10px;
+}
+
+.fieldLabel,
+.sectionLabel {
+  color: #444444;
+  font-weight: 600;
+}
+
+.textInput,
+.selectInput,
+.textareaInput,
+.numberInput,
+.specInput {
+  width: 100%;
+  border-radius: 18px;
+  border: 1px solid rgba(36, 36, 36, 0.12);
+  background: rgba(255, 255, 255, 0.94);
+  color: #1f1f1f;
+  padding: 14px 16px;
+  font: inherit;
+}
+
+.textInput:focus,
+.selectInput:focus,
+.textareaInput:focus,
+.numberInput:focus,
+.specInput:focus {
+  outline: none;
+  border-color: rgba(36, 36, 36, 0.3);
+}
+
+.textareaInput {
+  min-height: 140px;
+  resize: vertical;
+}
+
+.selectedPanel {
+  display: grid;
+  gap: 14px;
+}
+
+.selectedHeading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.selectedTitle {
+  margin: 0;
+  color: #1f1f1f;
+  font-size: 1.35rem;
+}
+
+.selectedSubtitle {
+  color: #646464;
+  font-size: 0.92rem;
+}
+
+.taskList {
+  display: grid;
+  gap: 14px;
+}
+
+.taskRow {
+  border-radius: 22px;
+  padding: 18px;
+}
+
+.taskHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.taskTitle {
+  color: #1f1f1f;
+  font-weight: 700;
+}
+
+.removeButton,
+.submitButton {
+  border-radius: 16px;
+  padding: 12px 16px;
+  cursor: pointer;
+  font: inherit;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.removeButton {
+  border: 1px solid rgba(36, 36, 36, 0.12);
+  background: rgba(36, 36, 36, 0.04);
+  color: #2a2a2a;
+}
+
+.submitButton {
+  border: 1px solid #262626;
+  background: #262626;
+  color: #f7f7f5;
+}
+
+.removeButton:hover,
+.submitButton:hover {
+  transform: translateY(-1px);
+}
+
+.taskFields {
+  display: grid;
+  gap: 10px;
+}
+
+.priceTag {
+  margin-top: 10px;
+  color: #2c2c2c;
+  font-weight: 700;
+}
+
+.priceSummary {
+  border-radius: 22px;
+  padding: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.priceNotice {
+  color: #6a6a6a;
+  font-size: 0.9rem;
+}
+
+.priceTotal {
+  color: #1f1f1f;
+  font-size: 1.2rem;
+}
+
+.messageBox {
+  margin-top: 18px;
+  padding: 16px 18px;
+  color: #424242;
+}
+
+@media screen and (max-width: 700px) {
+  .pageShell {
+    width: min(100%, calc(100% - 20px));
+    padding-top: 20px;
+  }
+
+  .heroPanel,
+  .formPanel,
+  .selectedPanel {
+    padding: 20px;
+  }
+
+  .taskHeader,
+  .selectedHeading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

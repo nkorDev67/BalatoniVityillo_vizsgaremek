@@ -1,289 +1,483 @@
 .adminWrapper {
-    display: flex;
-    min-height: 100vh;
-    background-color: #778088; /* Más háttérszín, mint a többi oldalon */
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 28px;
+    min-height: calc(100vh - 84px);
+    padding: 28px;
 }
 
 .sidebar {
-    width: 220px;
-    background-color: #2c3e50; /* Sötét, elegáns admin szín */
-    color: white;
-    height: calc(100vh - 60px); /* Kiszámolja a helyet a Navbar alatt */
     position: sticky;
-    top: 80px; /* A Navbar magassága */
-    padding: 20px 10px;
-    display: flex;
-    flex-direction: column;
+    top: 108px;
+    align-self: start;
+    display: grid;
+    gap: 24px;
+    padding: 24px;
+    border-radius: 28px;
+    background: linear-gradient(180deg, rgba(47, 35, 26, 0.95) 0%, rgba(95, 56, 31, 0.92) 100%);
+    color: #fff7ef;
+    box-shadow: 0 20px 44px rgba(49, 26, 8, 0.18);
+}
+
+.sidebarHeader {
+    display: grid;
     gap: 10px;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-    border-radius: 0 20px 0 0;
+}
+
+.sidebarTitle,
+.contentTitle,
+.sectionTitle {
+    margin: 0;
+}
+
+.sidebarSubtitle,
+.contentDescription,
+.sectionDescription,
+.statusText,
+.selectionNote {
+    margin: 0;
+    color: rgba(255, 247, 239, 0.8);
+}
+
+.navList {
+    display: grid;
     gap: 10px;
 }
 
 .content {
-    flex: 1;
-    padding: 40px;
+    display: grid;
+    gap: 22px;
+}
+
+.contentHeader,
+.sectionCard,
+.profileCard,
+.loadingCard {
+    background: rgba(255, 251, 247, 0.9);
+    border: 1px solid rgba(118, 69, 36, 0.14);
+    border-radius: 28px;
+    box-shadow: 0 18px 42px rgba(60, 33, 12, 0.08);
+}
+
+.contentHeader,
+.sectionCard,
+.loadingCard {
+    padding: 28px;
+}
+
+.contentEyebrow,
+.sectionEyebrow {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #a05f35;
+}
+
+.contentTitle {
+    font-size: clamp(2rem, 3vw, 2.8rem);
+    color: #2d1d11;
+}
+
+.contentDescription,
+.sectionDescription,
+.statusText,
+.selectionNote {
+    color: #725845;
+}
+
+.sectionHeader,
+.workerHeader,
+.profileHeader {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    align-items: flex-start;
+    margin-bottom: 24px;
+}
+
+.sectionTitleGroup {
+    display: grid;
+    gap: 8px;
+}
+
+.sectionTitle {
+    font-size: 1.5rem;
+    color: #2f2117;
+}
+
+.navBtn,
+.primaryAction,
+.secondaryAction,
+.dangerAction,
+.saveButton,
+.completeButton,
+.openModalBtn,
+.saveBtn,
+.detailsToggle,
+.fireBtn {
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .navBtn {
-    background: transparent;
-    border: none;
-    color: #ecf0f1;
-    padding: 12px 15px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff7ef;
+    padding: 14px 16px;
     text-align: left;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 14px;
-    
 }
 
-.navBtn:hover {
-    background-color: #34495e;
+.navBtn:hover,
+.primaryAction:hover,
+.secondaryAction:hover,
+.dangerAction:hover,
+.saveButton:hover,
+.completeButton:hover,
+.openModalBtn:hover,
+.saveBtn:hover,
+.detailsToggle:hover,
+.fireBtn:hover {
+    transform: translateY(-1px);
 }
 
 .activeBtn {
-    background-color: #d4a574 !important; 
-    color: white;
-    font-weight: bold;
+    background: linear-gradient(135deg, #d7a173 0%, #be7a45 100%) !important;
+    color: #fffdf8;
+    box-shadow: 0 14px 24px rgba(132, 74, 36, 0.28);
 }
-/* --- Munkás Kezelő Specifikus Osztályok --- */
 
-.workerHeader {
+.buttonRow {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
-
-/* A nagy kártya, ami a listát tartja */
-.workerListContainer {
-    background: white;
-    border-radius: 15px;
-    overflow: hidden;
-    border: 1px solid #e2e8f0;
+.primaryAction,
+.saveButton,
+.saveBtn,
+.openModalBtn {
+    background: linear-gradient(135deg, #c5844d 0%, #a96537 100%);
+    color: #fffef9;
+    padding: 12px 18px;
+    box-shadow: 0 12px 24px rgba(169, 101, 55, 0.2);
 }
 
-/* A táblázat fejléce */
-.listHeader {
+.secondaryAction,
+.detailsToggle {
+    background: rgba(118, 69, 36, 0.08);
+    color: #6f4325;
+    padding: 12px 18px;
+}
+
+.dangerAction,
+.fireBtn,
+.completeButton {
+    background: #f6e0dd;
+    color: #9d302a;
+    padding: 12px 18px;
+}
+
+.requestGrid {
     display: grid;
-    grid-template-columns: 1.5fr 2fr 1fr 1fr 2px;
-    padding: 15px 20px;
-    background-color: #f8fafc;
-    border-bottom: 2px solid #edf2f7;
-    font-weight: 700;
-    color: #475569;
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
 }
 
-/* A gördíthető terület */
+.workerListContainer,
+.tableWrap {
+    overflow: hidden;
+    border-radius: 22px;
+    border: 1px solid rgba(118, 69, 36, 0.12);
+    background: #fffdf9;
+}
+
+.listHeader,
+.workerRow {
+    display: grid;
+    grid-template-columns: 1.3fr 1.5fr 1fr 1fr auto;
+    gap: 12px;
+    padding: 16px 18px;
+    align-items: center;
+}
+
+.listHeader {
+    background: #f8f1e9;
+    color: #725845;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
 .scrollArea {
-    max-height: 450px; 
+    max-height: 460px;
     overflow-y: auto;
 }
 
-/* Egy sor a listában */
 .workerRow {
-    display: grid;
-    grid-template-columns: 1.5fr 2fr 1fr 1fr 2px;
-    padding: 18px 20px;
-    align-items: center;
-    border-bottom: 1px solid #f1f5f9;
-    transition: background-color 0.2s;
+    border-top: 1px solid rgba(118, 69, 36, 0.08);
 }
-
-.workerRow:hover {
-    background-color: #fbfcfd;
-}
-
-/* A "Kirúgás" gomb egyedi stílusa */
-.fireBtn {
-    background-color: #fee2e2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 13px;
-    transition: all 0.2s;
-    justify-self: end;
-}
-
-.fireBtn:hover {
-    background-color: #dc2626;
-    color: white;
-}
-/* --- Modal Stílusok --- */
 
 .modalOverlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000; 
-    backdrop-filter: blur(4px); 
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: rgba(24, 16, 10, 0.45);
+    backdrop-filter: blur(6px);
+    z-index: 2000;
 }
 
 .modalContent {
-    background: white;
-    padding: 30px;
-    border-radius: 20px;
-    width: 400px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    animation: scaleIn 0.2s ease-out;
+    width: min(460px, calc(100% - 32px));
+    display: grid;
+    gap: 16px;
+    padding: 28px;
+    border-radius: 24px;
+    background: #fffdf8;
+    box-shadow: 0 24px 46px rgba(25, 16, 10, 0.22);
 }
-
-
 
 .modalHeader {
-    margin-bottom: 20px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
+    display: grid;
+    gap: 6px;
 }
-
 
 .addBtnContainer {
     display: flex;
-    justify-content: center;
-    padding: 20px;
+    justify-content: flex-end;
+    padding-top: 18px;
 }
 
-.openModalBtn {
-    background-color: #d4a574;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.2s;
+.profileShell {
+    display: grid;
+    gap: 18px;
 }
 
-.openModalBtn:hover {
-    
-    background-color: #c49463;
+.profileCard {
+    overflow: hidden;
+}
+
+.profileHeader {
+    margin: 0;
+    padding: 24px 24px 0;
+}
+
+.profileBody {
+    padding: 24px;
+}
+
+.profileGrid,
+.formGrid {
+    display: grid;
+    gap: 16px;
+}
+
+.profileGrid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.profileItem {
+    display: grid;
+    gap: 8px;
+    padding: 18px;
+    border-radius: 18px;
+    background: #fff7f0;
+    border: 1px solid rgba(118, 69, 36, 0.08);
+}
+
+.profileLabel {
+    font-size: 0.84rem;
+    color: #8a6c57;
+    font-weight: 700;
+}
+
+.profileValue {
+    color: #2f2117;
+}
+
+.formField {
+    display: grid;
+    gap: 8px;
+}
+
+.textInput,
+.modalSelect,
+.dateInput {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(118, 69, 36, 0.16);
+    background: #fffdf9;
+    color: #2f2117;
+}
+
+.tableWrap {
+    overflow-x: auto;
 }
 
 .beosztasTable {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 10px; 
+    border-collapse: collapse;
 }
-.taskList {
-  height: 150px;       /* Minden kártyán ugyanakkora helyet foglal le */
-  overflow-y: auto;    /* Görgethető belül */
-  background: #fff;
-  border: 1px solid #ddd;
-  padding: 10px;
-  border-radius: 5px;
-}
-.footer {
-  margin-top: auto; 
-  padding: 15px;
-  border-top: 1px solid #eee;
+
+.beosztasTable thead tr {
+    background: #f8f1e9;
+    color: #725845;
+    text-align: left;
+    font-size: 0.84rem;
 }
 
 .taskRow {
-    background-color: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    transition: all 0.2s;
+    background: #fffdf9;
 }
-
-
 
 .taskCell {
-    padding: 15px;
-    border-bottom: 1px solid #eee;
+    padding: 16px;
+    border-top: 1px solid rgba(118, 69, 36, 0.08);
+    vertical-align: top;
 }
 
+.checkboxList,
+.taskList,
+.descriptionContainer {
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(118, 69, 36, 0.1);
+    background: #fff9f2;
+}
 
+.checkboxList,
+.taskList {
+    max-height: 160px;
+    overflow-y: auto;
+}
 
+.checkboxRow {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 0.9rem;
+}
 
 .header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #f3f4f6;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 18px;
 }
 
-.statusBadge {
-    background: #dbeafe;
-    color: #1e40af;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: bold;
+.requestCard {
+    display: grid;
+    gap: 18px;
+    padding: 22px;
+    border-radius: 24px;
+    background: #fffdf9;
+    border: 1px solid rgba(118, 69, 36, 0.12);
+    box-shadow: 0 16px 34px rgba(60, 33, 12, 0.08);
+}
+
+.body {
+    display: grid;
+    gap: 12px;
+    color: #463226;
+}
+
+.statusBadge,
+.statusAssigned,
+.statusMissing {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.statusBadge,
+.statusAssigned {
+    background: #deefe1;
+    color: #22603b;
+}
+
+.statusMissing {
+    background: #f7e4d2;
+    color: #8b4d22;
 }
 
 .dateInfo {
-    font-size: 0.85rem;
-    color: #6b7280;
-    margin-top: 10px;
+    color: #8a6c57;
+    font-size: 0.88rem;
+}
+
+.descriptionContainer {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.5;
+    max-height: 150px;
+    overflow-y: auto;
 }
 
 .footer {
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
+    display: grid;
     gap: 10px;
-}
-
-.dateInput {
-    padding: 8px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-}
-
-.saveButton {
-    background-color: #10b981;
-    color: white;
-    padding: 10px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
+    margin-top: auto;
 }
 
 .saveButton:disabled {
-    background-color: #9ca3af;
-}
-.descriptionContainer {
-  height: 120px;
-  max-height: 150px; 
-  overflow-y: auto;        /* Függőleges görgetés engedélyezése */
-  overflow-x: hidden;      /* Vízszintes görgetés tiltása */
-  
-  /* --- A hiba javítása: --- */
-  white-space: pre-wrap;   /* Megtartja a sortöréseket, de tördeli a hosszú sorokat */
-  word-break: break-word;  /* Ha egy szó túl hosszú (pl. egy link), akkor is eltöri */
-  overflow-wrap: break-word; /* Biztonsági tartalék a tördeléshez */
-  /* ------------------------ */
-
-  background-color: #f8f9fa;
-  padding: 12px;
-  border-radius: 6px;
-  border: 1px solid #ddd;
-  margin: 10px 0;
-  line-height: 1.5;
-  text-align: left;        /* Biztosítsuk a balra igazítást */
+    opacity: 0.72;
+    cursor: not-allowed;
+    transform: none;
 }
 
-/* Chrome/Safari görgetősáv design */
-.descriptionContainer::-webkit-scrollbar {
-  width: 6px;
+.errorText {
+    color: #a2342c;
+    margin: 0;
 }
-.descriptionContainer::-webkit-scrollbar-thumb {
-  background-color: #ccc;
-  border-radius: 10px;
+
+@media screen and (max-width: 1100px) {
+    .adminWrapper {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        position: static;
+    }
+}
+
+@media screen and (max-width: 720px) {
+    .adminWrapper,
+    .contentHeader,
+    .sectionCard,
+    .profileBody,
+    .profileHeader,
+    .modalContent {
+        padding: 20px;
+    }
+
+    .listHeader,
+    .workerRow {
+        grid-template-columns: 1fr;
+    }
+
+    .buttonRow,
+    .sectionHeader,
+    .workerHeader,
+    .profileHeader {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .addBtnContainer {
+        justify-content: stretch;
+    }
 }

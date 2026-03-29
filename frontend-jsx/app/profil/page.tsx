@@ -3,25 +3,57 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './profil.module.css';
+import { API_UTAK, OLDAL_UTAK, apiVegpont } from '@/lib/utvonalak';
 
+type ProfileData = {
+  id: number | null;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+};
+
+type ProfileFormData = {
+  name: string;
+  email: string;
+  phone: string;
+  currentPassword: string;
+  newPassword: string;
+};
+
+type RequestItem = {
+  FelujitasId: number;
+  HelyszinCim: string;
+  Leiras: string;
+  Statusz: string;
+  KezdesDatuma: string | null;
+};
+
+type Worker = {
+  Felhasznalonev: string;
+  Telefonszam: string;
+};
 
 export default function ProfilPage() {
   const router = useRouter();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [user, setUser] = useState({ name: '', email: '', phone: '' });
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', currentPassword: '', newPassword: '' });
+  const [user, setUser] = useState<ProfileData>({ id: null, name: '', email: '', phone: '', role: '' });
+  const [formData, setFormData] = useState<ProfileFormData>({ name: '', email: '', phone: '', currentPassword: '', newPassword: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [myRequests, setMyRequests] = useState<any[]>([]);
-  const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
-  const [workers, setWorkers] = useState<any[]>([]);
+  const [myRequests, setMyRequests] = useState<RequestItem[]>([]);
+  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
+  const [workers, setWorkers] = useState<Worker[]>([]);
   const [detailsLoading, setDetailsLoading] = useState(false);
 
+  const formattedRequestCount = `${myRequests.length} aktív kérés`;
+  const firstName = user.name ? user.name.split(' ')[0] : 'Vendég';
 
   const handleEditToggle = () => {
-    setFormData({ ...user, currentPassword: '', newPassword: '' });
+    setFormData({ name: user.name, email: user.email, phone: user.phone, currentPassword: '', newPassword: '' });
     setError('');
     setIsEditing(!isEditing);
   };
@@ -30,7 +62,7 @@ export default function ProfilPage() {
     setError('');
     const token = localStorage.getItem('token');
     if (!token) {
-      router.push('/login');
+      router.push(OLDAL_UTAK.bejelentkezes);
       return;
     }
 
@@ -41,10 +73,7 @@ export default function ProfilPage() {
 
     setSaving(true);
     try {
-      const rawUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const baseUrl = rawUrl.replace(/\/?$/, '');
-      const apiEndpoint = baseUrl.endsWith('/api') ? `${baseUrl}/auth/me` : `${baseUrl}/api/auth/me`;
-      const res = await fetch(apiEndpoint, {
+      const res = await fetch(apiVegpont(API_UTAK.azonositas.profilom), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -65,7 +94,7 @@ export default function ProfilPage() {
         return;
       }
 
-      setUser({ name: data.name, email: data.email, phone: data.phone });
+      setUser((current) => ({ ...current, name: data.name, email: data.email, phone: data.phone }));
       setIsEditing(false);
       setFormData({ ...formData, currentPassword: '', newPassword: '' });
     } catch (err) {
@@ -77,51 +106,64 @@ export default function ProfilPage() {
   };
 
   const handleLogout = () => {
-    localStorage.clear();
-    window.location.href = "/login";
-  }
-    //felujitaskerelem Modal függvény
-  const handleOpenDetails = async (request: any) => {
-    setSelectedRequest(request)
-    setWorkers([])
-    setDetailsLoading(true)
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('user');
+    window.location.href = OLDAL_UTAK.bejelentkezes;
+  };
 
-    const token = localStorage.getItem('token')
-    try{
-      const res = await fetch(`http://localhost:5000/api/felujitas/details/${request.FelujitasId}`, {
+  const handleOpenDetails = async (request: RequestItem) => {
+    setSelectedRequest(request);
+    setWorkers([]);
+    setDetailsLoading(true);
+
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(apiVegpont(API_UTAK.felujitas.reszletek(request.FelujitasId)), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if(res.ok){
-        const data = await res.json()
-        setWorkers(data.munkasok || [])
+      if (res.ok) {
+        const data = await res.json();
+        setWorkers(data.munkasok || []);
       }
     } catch (err) {
       console.error('Hiba történt a részletek lekérdezése során:', err);
     } finally {
       setDetailsLoading(false);
     }
-  }
+  };
+
+  const formatDate = (date: string | null) => {
+    if (!date) {
+      return 'Időpont egyeztetés alatt';
+    }
+
+    return new Date(date).toLocaleDateString('hu-HU');
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const rawUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const baseUrl = rawUrl.replace(/\/?$/, ''); // trim trailing slash
-      const apiEndpoint = baseUrl.endsWith('/api') ? `${baseUrl}/auth/me` : `${baseUrl}/api/auth/me`;
-      console.log('DEBUG API URL:', rawUrl, '-> using endpoint', apiEndpoint);     
       const token = localStorage.getItem('token');
       if (!token) {
-        router.push('/login');
+        router.push(OLDAL_UTAK.bejelentkezes);
         return;
       }
 
       try {
-        const res = await fetch(apiEndpoint, {
+        const res = await fetch(apiVegpont(API_UTAK.azonositas.profilom), {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
         if (res.status === 401) {
           localStorage.removeItem('token');
-          router.push('/login');
+          router.push(OLDAL_UTAK.bejelentkezes);
+          return;
+        }
+
+        if (res.status === 403) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('role');
+          router.push(OLDAL_UTAK.bejelentkezes);
           return;
         }
 
@@ -132,160 +174,218 @@ export default function ProfilPage() {
         }
 
         const data = await res.json();
-        setUser({ name: data.name || '', email: data.email || '', phone: data.phone || '' });
+        setUser({
+          id: data.id ?? null,
+          name: data.name || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          role: data.role || ''
+        });
         setFormData({ name: data.name || '', email: data.email || '', phone: data.phone || '', currentPassword: '', newPassword: '' });
+        setLoadError('');
       } catch (err) {
         console.error('Profil betöltési hiba:', err);
+        setLoadError('Nem sikerült betölteni a felhasználói adatokat az adatbázisból.');
       } finally {
         setLoading(false);
       }
     };
-     const fetchMyRequests = async () => {
-    const token = localStorage.getItem('token');
-    try{
-      const res = await fetch('http://localhost:5000/api/felujitas/my-requests',{
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok){
-        const data = await res.json()
-        setMyRequests(data);
+
+    const fetchMyRequests = async () => {
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(apiVegpont(API_UTAK.felujitas.sajatKeresek), {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setMyRequests(data);
+        }
+      } catch (err) {
+        console.error('Hiba történt a kérések lekérdezése során:', err);
       }
-    }catch(err){
-      console.error('Hiba történt a kérések lekérdezése során:', err);
-    }
-  };
-  fetchMyRequests();
-  fetchProfile();
-  }, [router] 
+    };
 
-);
+    fetchMyRequests();
+    fetchProfile();
+  }, [router]);
 
+  if (loading) {
+    return (
+      <main className={styles.pageShell}>
+        <section className={styles.heroPanel}>
+          <p className={styles.loadingState}>Profil betöltése folyamatban...</p>
+        </section>
+      </main>
+    );
+  }
 
 
   return (
-    <main className="main-wrapper" style={{ paddingTop: '100px' }}>
-      <h1>Üdv, {user.name}!</h1>
+    <main className={styles.pageShell}>
+      <section className={styles.heroPanel}>
+        <div>
+          <span className={styles.eyebrow}>Profilközpont</span>
+          <h1 className={styles.pageTitle}>Üdv, {firstName}!</h1>
+          <p className={styles.pageSubtitle}>
+            Minden adat, felújítási kérelmed és állapotfrissítésed egy egységes, visszafogott felületen jelenik meg.
+          </p>
+        </div>
+        <div className={styles.summaryGrid}>
+          <div className={styles.summaryCard}>
+            <span>Kérelmek</span>
+            <strong>{formattedRequestCount}</strong>
+          </div>
+          <div className={styles.summaryCard}>
+            <span>Elérési mód</span>
+            <strong className={styles.summaryValue}>{user.phone || user.email || 'Nincs megadva'}</strong>
+          </div>
+        </div>
+      </section>
 
-      <div className="profile-container">
-        
-        {/* BAL OLDAL: PROFIL VAGY SZERKESZTÉS */}
+      {loadError ? <p className={styles.errorText}>{loadError}</p> : null}
+
+      <section className={styles.contentGrid}>
         {!isEditing ? (
-          <div className="profile-card">
-            <div className="profile-header">
-              <h3>Személyes adatok</h3>
-              <button className="btn-logout" onClick={handleLogout}>Kijelentkezés</button>
-              <button className="btn-edit" onClick={handleEditToggle}>Szerkesztés</button>
+          <div className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <div>
+                <span className={styles.panelLabel}>Profil</span>
+                <h2 className={styles.panelTitle}>Személyes adatok</h2>
+              </div>
+              <div className={styles.actionRow}>
+                <button className={styles.secondaryButton} onClick={handleLogout}>Kijelentkezés</button>
+                <button className={styles.primaryButton} onClick={handleEditToggle}>Szerkesztés</button>
+              </div>
             </div>
-            <div className="profile-body">
-              
-              <div className="info-row">
-                <div className="info-label">Teljes név:</div>
-                <div className="info-value">{user.name}</div>
+            <div className={styles.panelBody}>
+              <div className={styles.dataRow}>
+                <div className={styles.dataLabel}>Teljes név</div>
+                <div className={styles.dataValue}>{user.name || 'Nincs megadva'}</div>
               </div>
-              <div className="info-row">
-                <div className="info-label">E-mail:</div>
-                <div className="info-value">{user.email}</div>
+              <div className={styles.dataRow}>
+                <div className={styles.dataLabel}>E-mail</div>
+                <div className={styles.dataValue}>{user.email || 'Nincs megadva'}</div>
               </div>
-              <div className="info-row">
-                <div className="info-label">Telefon:</div>
-                <div className="info-value">{user.phone}</div>
+              <div className={styles.dataRow}>
+                <div className={styles.dataLabel}>Telefon</div>
+                <div className={styles.dataValue}>{user.phone || 'Nincs megadva'}</div>
               </div>
             </div>
           </div>
         ) : (
-          <div className="profile-card">
-            <div className="profile-header">
-              <h3>Adatok módosítása</h3>
+          <div className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <div>
+                <span className={styles.panelLabel}>Szerkesztés</span>
+                <h2 className={styles.panelTitle}>Adatok módosítása</h2>
+              </div>
             </div>
-            <div className="profile-body">
-              <form onSubmit={handleSave}>
-                <div className="info-row">
-                  <div className="info-label">Név:</div>
+            <div className={styles.panelBody}>
+              <form onSubmit={handleSave} className={styles.formStack}>
+                <div className={styles.formRow}>
+                  <div className={styles.dataLabel}>Név</div>
                   <input 
                     type="text" 
-                    className="adasokmezo" 
+                    className={styles.input} 
                     value={formData.name} 
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                   />
                 </div>
-                <div className="info-row">
-                  <div className="info-label">E-mail:</div>
+                <div className={styles.formRow}>
+                  <div className={styles.dataLabel}>E-mail</div>
                   <input 
                     type="email" 
-                    className="adasokmezo" 
+                    className={styles.input} 
                     value={formData.email} 
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                   />
                 </div>
-                <div className="info-row">
-                  <div className="info-label">Jelenlegi jelszó:</div>
+                <div className={styles.formRow}>
+                  <div className={styles.dataLabel}>Telefon</div>
+                  <input 
+                    type="tel" 
+                    className={styles.input} 
+                    value={formData.phone} 
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  />
+                </div>
+                <div className={styles.formRow}>
+                  <div className={styles.dataLabel}>Jelenlegi jelszó</div>
                   <input 
                     type="password" 
-                    className="adasokmezo" 
+                    className={styles.input} 
                     value={formData.currentPassword} 
                     onChange={(e) => setFormData({...formData, currentPassword: e.target.value})}
                     required
                   />
                 </div>
 
-                <div className="info-row">
-                  <div className="info-label">Új jelszó (opcionális):</div>
+                <div className={styles.formRow}>
+                  <div className={styles.dataLabel}>Új jelszó</div>
                   <input 
                     type="password" 
-                    className="adasokmezo" 
+                    className={styles.input} 
                     value={formData.newPassword} 
                     onChange={(e) => setFormData({...formData, newPassword: e.target.value})}
+                    placeholder="Ha nem szeretnél jelszót cserélni, hagyd üresen"
                   />
                 </div>
-                
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
-                  <button type="button" className="btn-cancel" onClick={handleEditToggle}>Mégse</button>
-                  <button type="submit" className="btn-save">Mentés</button>
+
+                {error ? <p className={styles.errorText}>{error}</p> : null}
+
+                <div className={styles.actionRowEnd}>
+                  <button type="button" className={styles.secondaryButton} onClick={handleEditToggle}>Mégse</button>
+                  <button type="submit" className={styles.primaryButton} disabled={saving}>
+                    {saving ? 'Mentés folyamatban...' : 'Mentés'}
+                  </button>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-          <div className="profile-card requests-card" style={{ gridColumn: '1 / -1'}}>
-  <div className="profile-header">
-    <h3>🔨 Felújításaim állapota</h3>
-  </div>
-  <div className="profile-body">
-    {myRequests.length > 0 ? (
-      <div className="requests-list">
-        {myRequests.map((req) => (
-          <div key={req.FelujitasId} className="status-item clickable" onClick={() => handleOpenDetails(req) } style={{cursor: 'pointer'}}>
-            <div className="status-info">
-              <span className="status-location">{req.HelyszinCim}</span>
-              <span className={styles.statusDesc}>{req.Leiras}</span>
+        <div className={`${styles.panel} ${styles.fullWidthPanel}`}>
+          <div className={styles.panelHeader}>
+            <div>
+              <span className={styles.panelLabel}>Kérelmek</span>
+              <h2 className={styles.panelTitle}>Felújításaim állapota</h2>
             </div>
-            
-            <div className="status-badge-container">
-              {/* Dinamikus osztálynév a színekhez */}
-              <span className={`status-badge ${req.Statusz.toLowerCase()}`}>
-                {req.Statusz}
-              </span>
-              <small className="status-date">
-                {req.KezdesDatuma 
-                  ? `Kezdés: ${new Date(req.KezdesDatuma).toLocaleDateString('hu-HU')}` 
-                  : "Várakozás adminra..."}
-              </small>
-            </div>
+            <button onClick={() => router.push('/felujitaskeres')} className={styles.secondaryButton}>Új kérés indítása</button>
           </div>
-        ))}
-      </div>
-    ) : (
-      <div className="no-requests">
-        <p>Még nem küldtél be felújítási kérelmet.</p>
-        <button onClick={() => router.push('/ajanlatkeres')} className="btn-edit">Új kérés indítása</button>
-      </div>
-    )}
-    </div>
-  </div>
+          <div className={styles.panelBody}>
+            {myRequests.length > 0 ? (
+              <div className={styles.requestList}>
+                {myRequests.map((request) => (
+                  <button
+                    type="button"
+                    key={request.FelujitasId}
+                    className={styles.requestItem}
+                    onClick={() => handleOpenDetails(request)}
+                  >
+                    <div className={styles.requestInfo}>
+                      <span className={styles.requestLocation}>{request.HelyszinCim}</span>
+                      <span className={styles.requestDescription}>{request.Leiras}</span>
+                    </div>
 
-</div>
-    {selectedRequest && (
+                    <div className={styles.requestMeta}>
+                      <span className={styles.statusBadge}>{request.Statusz}</span>
+                      <small className={styles.requestDate}>{`Kezdés: ${formatDate(request.KezdesDatuma)}`}</small>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className={styles.emptyState}>
+                <p>Még nem küldtél be felújítási kérelmet.</p>
+                <button onClick={() => router.push('/felujitaskeres')} className={styles.primaryButton}>Első kérelmem</button>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {selectedRequest && (
         <div className={styles.modalOverlay} onClick={() => setSelectedRequest(null)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <button className={styles.modalClose} onClick={() => setSelectedRequest(null)}>×</button>
@@ -293,38 +393,35 @@ export default function ProfilPage() {
             <h2 className={styles.modalTitle}>Részletek: {selectedRequest.HelyszinCim}</h2>
             
             <div className={styles.modalInfoGrid}>
-              <p><strong>Státusz:</strong> <span className={`status-badge ${selectedRequest.Statusz.toLowerCase()}`}>{selectedRequest.Statusz}</span></p>
-              <p ><strong>Leírás:</strong> {selectedRequest.Leiras}</p>
-              <p><strong>Kezdés:</strong> {selectedRequest.KezdesDatuma ? new Date(selectedRequest.KezdesDatuma).toLocaleDateString('hu-HU') : 'Várható...'}</p>
+              <p><strong>Státusz:</strong> <span className={styles.statusBadge}>{selectedRequest.Statusz}</span></p>
+              <p><strong>Leírás:</strong> {selectedRequest.Leiras}</p>
+              <p><strong>Kezdés:</strong> {formatDate(selectedRequest.KezdesDatuma)}</p>
             </div>
 
             <hr className={styles.modalDivider} />
             
-            <h3>👷 Beosztott szakemberek</h3>
+            <h3 className={styles.modalSubtitle}>Beosztott szakemberek</h3>
             {detailsLoading ? (
-              <p>Betöltés...</p>
+              <p className={styles.modalText}>Betöltés...</p>
             ) : workers.length > 0 ? (
               <div className={styles.workerList}>
                 {workers.map((m, idx) => (
                   <div key={idx} className={styles.workerDetailCard}>
-                    <span className={styles.workerName}>👤 {m.Felhasznalonev}</span>
-                    <a href={`tel:${m.Telefonszam}`} className={styles.workerPhone}>📞 {m.Telefonszam}</a>
+                    <span className={styles.workerName}>{m.Felhasznalonev}</span>
+                    <a href={`tel:${m.Telefonszam}`} className={styles.workerPhone}>{m.Telefonszam}</a>
                   </div>
                 ))}
               </div>
             ) : (
               <p className={styles.noWorkersMsg}>
                 {selectedRequest.Statusz === 'Függőben' 
-                  ? "Hamarosan beosztjuk a szakembereket." 
+                  ? 'Hamarosan beosztjuk a szakembereket.' 
                   : "Nincsenek beosztott munkások."}
               </p>
             )}
           </div>
         </div>
       )}
- 
-
-
     </main>
   );
 }

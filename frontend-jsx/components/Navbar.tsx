@@ -6,57 +6,64 @@ import { usePathname } from "next/navigation";
 
 export default function Navbar() {
   const [role, setRole] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
-  
 
   useEffect(() => {
-    // Csak betöltéskor nézzük meg, ki van bent
     const storedRole = localStorage.getItem("role");
     setRole(storedRole);
+    setMenuOpen(false);
   }, [pathname]);
 
-  
+  const isActive = (href: string) => pathname === href;
+
   return (
     <nav className="navbar">
-      <ul>
-        <li><Link href="/">Home</Link></li>
-        
-        {/* Mindenkinek látható dropdownek */}
-        <li className="dropdown">
-          <span className="dropbtn">Bérlés</span>
-          <div className="dropdown-content">
-            <Link href="/berbeadas">Bérbe adás</Link>
-            <Link href="/berles">Bérlés</Link>
-          </div>
-          
-        </li>
-        <li className="dropdown">
-          <span className="dropbtn">Ingatlan</span>
-          <div className="dropdown-content">
-            <Link href="/adas"> Adás</Link>
-            <Link href="/vetel">Vétel</Link>
-          </div>
-          
-        </li>
+      <div className="navbar-inner">
+        <Link href="/" className="brand-mark">Balatoni Vityilló</Link>
 
-        {/* Feltételes menüpontok */}
-        {role === "felhasznalo" && (
-          <li><Link href="/felujitaskeres">Felújítás kérése</Link></li>
-        )}
+        <button
+          type="button"
+          className={`navbar-toggle ${menuOpen ? "open" : ""}`}
+          onClick={() => setMenuOpen((current) => !current)}
+          aria-expanded={menuOpen}
+          aria-label="Menü megnyitása"
+        >
+          <span />
+          <span />
+          <span />
+        </button>
 
-        {role === "szakember" && (
-          <li><Link href="/beosztas">Beosztásom</Link></li>
-        )}
+        <ul className={`navbar-links ${menuOpen ? "open" : ""}`}>
+          <li>
+            <Link href="/" className={isActive("/") ? "active" : ""}>Kezdőlap</Link>
+          </li>
 
-        {role === "admin" && (
-          <li><Link href="/admin">Admin</Link></li>
-        )}
-        {(role === "felhasznalo" || role === "szakember") && (
-        <li><Link href="/profil">Profil</Link></li>
-        )}
-       
+          {role === "felhasznalo" && (
+            <li>
+              <Link href="/felujitaskeres" className={isActive("/felujitaskeres") ? "active" : ""}>Felújítás kérése</Link>
+            </li>
+          )}
 
-      </ul>
+          {role === "szakember" && (
+            <li>
+              <Link href="/beosztas" className={isActive("/beosztas") ? "active" : ""}>Beosztásom</Link>
+            </li>
+          )}
+
+          {role === "admin" && (
+            <li>
+              <Link href="/admin" className={isActive("/admin") ? "active" : ""}>Admin</Link>
+            </li>
+          )}
+
+          {(role === "felhasznalo" || role === "szakember") && (
+            <li>
+              <Link href="/profil" className={isActive("/profil") ? "active" : ""}>Profil</Link>
+            </li>
+          )}
+        </ul>
+      </div>
     </nav>
   );
 }

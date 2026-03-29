@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import styles from '../app/admin/admin.module.css';
+import { API_UTAK, apiVegpont } from '@/lib/utvonalak';
 
 interface Munkas {
   id: number;
@@ -26,7 +27,7 @@ export default function MunkasKezelo({ munkasok, setMunkasok }: Props) {
     if (!confirm("Biztosan törölni / visszafokozni szeretnéd ezt a munkást?")) return;
     try {
       const token = localStorage.getItem('token');
-      const resp = await fetch(`http://localhost:5000/api/admin/workers/${id}`, {
+      const resp = await fetch(apiVegpont(API_UTAK.adminisztracio.munkas(id)), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -42,7 +43,7 @@ export default function MunkasKezelo({ munkasok, setMunkasok }: Props) {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/admin/workers', {
+      const response = await fetch(apiVegpont(API_UTAK.adminisztracio.munkasok), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,9 +71,11 @@ export default function MunkasKezelo({ munkasok, setMunkasok }: Props) {
   return(
     <div>
             <div className={styles.workerHeader}>
-              <h1>Munkások kezelése</h1>
-              
-             
+              <div className={styles.sectionTitleGroup}>
+                <span className={styles.sectionEyebrow}>Szakemberek</span>
+                <h2 className={styles.sectionTitle}>Munkások kezelése</h2>
+                <p className={styles.sectionDescription}>A listában csak a szakember jogosultságú munkatársak jelennek meg.</p>
+              </div>
             </div>
             <div className={styles.workerListContainer}>
               <div className={styles.listHeader}>
@@ -114,31 +117,27 @@ export default function MunkasKezelo({ munkasok, setMunkasok }: Props) {
                       value={ujEmail}
                       onChange={(e) => setUjEmail(e.target.value)}
                       required
+                      className={styles.textInput}
                     />
-                    <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="szakma" style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
-            Munkás szakmája:
-          </label>
-          <select 
-            id="szakma"
-            value={ujSzakma} 
-            onChange={(e) => setUjSzakma(e.target.value)}
-            className={styles.modalSelect} // Adj neki stílust a CSS-ben!
-            style={{ width: '100%', padding: '10px', borderRadius: '5px' }}
-          >
-            <option value="Festő">Festő</option>
-            <option value="Burkoló">Burkoló</option>
-            <option value="Vízvezetékszerelő">Vízvezetékszerelő</option>
-            <option value="Villanyszerelő">Villanyszerelő</option>
-            <option value="Általános segéd">Általános segéd</option>
-          </select>
-        </div>
-                   <div>
-                    <button type="submit" className={styles.saveBtn}>Munkás hozzáadása</button>
-                   </div>
-                   <div>
-                     <button type='button' onClick={() => setIsModalOpen(false)}>Mégse</button>
-                   </div>
+                    <div className={styles.formField}>
+                      <label htmlFor="szakma" className={styles.profileLabel}>Munkás szakmája</label>
+                      <select 
+                        id="szakma"
+                        value={ujSzakma} 
+                        onChange={(e) => setUjSzakma(e.target.value)}
+                        className={styles.modalSelect}
+                      >
+                        <option value="Festő">Festő</option>
+                        <option value="Burkoló">Burkoló</option>
+                        <option value="Vízvezetékszerelő">Vízvezetékszerelő</option>
+                        <option value="Villanyszerelő">Villanyszerelő</option>
+                        <option value="Általános segéd">Általános segéd</option>
+                      </select>
+                    </div>
+                    <div className={styles.buttonRow}>
+                      <button type="submit" className={styles.primaryAction}>Munkás hozzáadása</button>
+                      <button type='button' className={styles.secondaryAction} onClick={() => setIsModalOpen(false)}>Mégse</button>
+                    </div>
                     
                   </form>
                  

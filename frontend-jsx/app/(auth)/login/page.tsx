@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { API_UTAK, OLDAL_UTAK, apiVegpont } from '@/lib/utvonalak';
 
 export default function LoginPage() {
   const [identity, setIdentity] = useState('');
@@ -15,7 +16,7 @@ export default function LoginPage() {
     setError('');
 
     try{
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+      const response = await fetch(apiVegpont(API_UTAK.azonositas.bejelentkezes), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -29,9 +30,11 @@ export default function LoginPage() {
         localStorage.setItem('role', data.role); // 'admin' vagy 'user'
 
         if (data.role === 'admin') {
-          router.push('/admin');
+          router.push(OLDAL_UTAK.admin);
+        } else if (data.role === 'szakember') {
+          router.push(OLDAL_UTAK.beosztas);
         } else {
-          router.push('/profil');
+          router.push(OLDAL_UTAK.profil);
         }
       } else {
         setError(data.message || 'Hibás felhasználónév vagy jelszó!');
@@ -81,7 +84,7 @@ export default function LoginPage() {
           <br />
           
           {/* Next.js-ben gombok helyett Linket használunk a navigációhoz */}
-          <Link href="/register">
+          <Link href={OLDAL_UTAK.regisztracio}>
             <button className="btn secondary">Még nincs fiókom</button>
           </Link>
           

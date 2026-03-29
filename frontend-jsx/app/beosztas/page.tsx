@@ -2,9 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
+import { API_UTAK, OLDAL_UTAK, apiVegpont } from '@/lib/utvonalak';
+import { useRouteGuard } from '@/lib/jogosultsagOr';
 
 export default function BeosztasPage() {
   const router = useRouter();
+  const { allowed, checking } = useRouteGuard(['szakember']);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -12,19 +15,18 @@ export default function BeosztasPage() {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!allowed) {
+        return;
+      }
+
       const token = localStorage.getItem('token');
       if (!token) {
-        router.push('/auth/login');
+        router.push(OLDAL_UTAK.kezdolap);
         return;
       }
 
       try {
-        const rawUrl = process.env.NEXT_PUBLIC_API_URL || '';
-        const baseUrl = rawUrl.replace(/\/?$/, '');
-
-        // Felhasználó adatok lekérése
-        const userEndpoint = baseUrl.endsWith('/api') ? `${baseUrl}/auth/me` : `${baseUrl}/api/auth/me`;
-        const userRes = await fetch(userEndpoint, {
+        const userRes = await fetch(apiVegpont(API_UTAK.azonositas.profilom), {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -44,8 +46,7 @@ export default function BeosztasPage() {
         }
 
         // Beosztások lekérése: csak a bejelentkezett szakember saját beosztásai
-        const assignmentsEndpoint = baseUrl.endsWith('/api') ? `${baseUrl}/beosztas/my-assignments` : `${baseUrl}/api/beosztas/my-assignments`;
-        const assignmentsRes = await fetch(assignmentsEndpoint, {
+        const assignmentsRes = await fetch(apiVegpont(API_UTAK.beosztas.sajatBeosztasok), {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -67,17 +68,15 @@ export default function BeosztasPage() {
     };
 
     fetchData();
-  }, [router]);
+  }, [allowed, router]);
 
   const markFinished = async (assignment: any) => {
     const token = localStorage.getItem('token');
     if (!token) return;
     try {
-      const rawUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const baseUrl = rawUrl.replace(/\/?$/, '');
       const id = assignment.FeladatId ?? assignment.feladatId ?? assignment.FeladatID ?? assignment.id ?? assignment.feladat?.FeladatId ?? assignment.feladat?.feladatId;
       console.log('markFinished called for assignment, resolved id=', id);
-      const endpoint = baseUrl.endsWith('/api') ? `${baseUrl}/beosztas/complete/${id}` : `${baseUrl}/api/beosztas/complete/${id}`;
+      const endpoint = apiVegpont(API_UTAK.beosztas.befejezes(id));
       console.log('Calling endpoint:', endpoint);
       const res = await fetch(endpoint, {
         method: 'PATCH',
@@ -102,6 +101,10 @@ export default function BeosztasPage() {
       setError('Hálózati hiba történt.');
     }
   };
+
+  if (checking || !allowed) {
+    return null;
+  }
 
   if (loading) {
     return (

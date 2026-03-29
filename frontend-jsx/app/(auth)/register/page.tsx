@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { API_UTAK, OLDAL_UTAK, apiVegpont } from '@/lib/utvonalak';
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
@@ -51,7 +52,7 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
+      const response = await fetch(apiVegpont(API_UTAK.azonositas.regisztracio), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -66,7 +67,7 @@ export default function RegisterPage() {
       if (response.ok) {
         setSuccess(data.message || 'Sikeres regisztráció!');
         // opcionálisan átirányíthatjuk a bejelentkező oldalra néhány másodperc után
-        setTimeout(() => router.push('/login'), 2000);
+        setTimeout(() => router.push(OLDAL_UTAK.bejelentkezes), 2000);
       } else {
         setError(data.message || data.error || 'Ismeretlen hiba történt.');
       }
@@ -134,7 +135,7 @@ export default function RegisterPage() {
         </form>
 
         <br />
-        <Link href="/login">
+        <Link href={OLDAL_UTAK.bejelentkezes}>
           <button className="btn secondary">Már van fiókom</button>
         </Link>
         &nbsp; {/* Kis hely a gombok között */}

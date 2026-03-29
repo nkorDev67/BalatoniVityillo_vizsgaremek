@@ -9,14 +9,72 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
+const { poolPromise, sql } = require('./config/dbconfig');
+
+const getPublicHomeData = async (req, res) => {
+  try {
+    const pool = await poolPromise;
+
+    const statsResult = await pool.request().query(`
+      SELECT
+        (SELECT COUNT(*) FROM Felujitas WHERE Statusz = 'Befejezve') AS completedRemodels,
+        (SELECT COUNT(DISTINCT FelhasznaloId) FROM Felujitas) AS satisfiedOwners,
+        (SELECT COUNT(*) FROM Szakember) AS expertTeam,
+        (SELECT COUNT(*) FROM Felujitas WHERE Statusz <> 'Befejezve') AS activeProjects
+    `);
+
+    const featuredResult = await pool.request().query(`
+      SELECT TOP 4
+        f.FelujitasId,
+        f.HelyszinCim,
+        f.Statusz,
+        f.KezdesDatuma,
+        f.Leiras,
+        ISNULL(u.Felhasznalonev, 'Ismeretlen ügyfél') AS UgyfelNeve,
+        ISNULL(SUM(ft.Ar), 0) AS OsszAr,
+        COUNT(ft.FeladatId) AS FeladatDb
+      FROM Felujitas f
+      LEFT JOIN Felhasznalo u ON u.FelhasznaloId = f.FelhasznaloId
+      LEFT JOIN Feladat ft ON ft.FelujitasId = f.FelujitasId
+      GROUP BY
+        f.FelujitasId,
+        f.HelyszinCim,
+        f.Statusz,
+        f.KezdesDatuma,
+        f.Leiras,
+        u.Felhasznalonev
+      ORDER BY ISNULL(f.KezdesDatuma, '1900-01-01') DESC, f.FelujitasId DESC
+    `);
+
+    const stats = statsResult.recordset[0] || {};
+
+    res.json({
+      stats: {
+        completedRemodels: stats.completedRemodels || 0,
+        satisfiedOwners: stats.satisfiedOwners || 0,
+        expertTeam: stats.expertTeam || 0,
+        activeProjects: stats.activeProjects || 0,
+      },
+      featuredRequests: featuredResult.recordset,
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('public home endpoint hiba:', err);
+    res.status(500).json({ error: 'Nem sikerült lekérni a kezdőoldal adatait.' });
+  }
+};
+
 // általános útvonalak
 app.use('/api/felujitas', felujitasRoutes)
 app.use('/api/auth', authRoutes)
+app.use('/api/azonositas', authRoutes)
 app.use('/api/beosztas', beosztasRoutes)
+app.get('/api/public/home', getPublicHomeData)
+app.get('/api/nyilvanos/kezdolap', getPublicHomeData)
+app.get('/api/public-stats', getPublicHomeData)
 
 // Új végpont: minden beosztás listázása, a hozzá rendelt szakemberhez tartozó munkákat jelöljük
 const jwt = require('jsonwebtoken');
-const { poolPromise, sql } = require('./config/dbconfig');
 
 app.get('/api/beosztas/assignments', async (req, res) => {
   try {
@@ -64,6 +122,7 @@ app.get('/api/beosztas/assignments', async (req, res) => {
 // admin-specifikus végpontok (ellenőrizni fogjuk a token->isAdmin közben)
 const adminRoutes = require('./routes/adminRoutes');
 app.use('/api/admin', adminRoutes)
+app.use('/api/adminisztracio', adminRoutes)
 
 // Tesztútvonal a gyors ellenőrzéshez
 app.get('/test', (req, res) => res.send('ok'));
