@@ -5,6 +5,22 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { API_UTAK, OLDAL_UTAK, apiVegpont } from '@/lib/utvonalak';
 
+const ERVENYES_TELEFON_ELOHIVOK = new Set(['20', '30', '50', '70']);
+const TELEFONSZAM_ELOHIVO_HIBA = 'A telefonszám előhívója nem megfelelő. Csak +36 20, +36 30, +36 50 vagy +36 70 kezdetű szám adható meg.';
+
+const normalizaltMagyarTelefonszam = (ertek: string) => {
+  const nyersSzamjegyek = ertek.replace(/\D/g, '');
+  let normalizaltSzamjegyek = nyersSzamjegyek;
+
+  if (normalizaltSzamjegyek.startsWith('06')) {
+    normalizaltSzamjegyek = `36${normalizaltSzamjegyek.slice(2)}`;
+  } else if (!normalizaltSzamjegyek.startsWith('36')) {
+    normalizaltSzamjegyek = `36${normalizaltSzamjegyek.replace(/^0+/, '')}`;
+  }
+
+  return `+${normalizaltSzamjegyek.slice(0, 11)}`;
+};
+
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -15,16 +31,7 @@ export default function RegisterPage() {
   const router = useRouter();
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value;
-    // eltávolítunk minden nem számjegyet (kivéve a + jelet elején)
-    if (!val.startsWith('+')) {
-      val = '+' + val.replace(/\D/g, '');
-    }
-    // biztosítjuk, hogy +36 mindig legyen elől
-    if (!val.startsWith('+36')) {
-      val = '+36' + val.replace(/\D/g, '').replace(/^36/, '');
-    }
-    setPhone(val);
+    setPhone(normalizaltMagyarTelefonszam(e.target.value));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,9 +52,14 @@ export default function RegisterPage() {
       setError('A jelszónak legalább 4 karakter hosszúnak kell lennie és tartalmaznia kell számot.');
       return;
     }
-    const phoneDigits = phone.replace(/\D/g, '');
-    if (phoneDigits.length !== 11) {
+    const telefonszamSzamjegyek = phone.replace(/\D/g, '');
+    if (telefonszamSzamjegyek.length !== 11) {
       setError('A telefonszámnak +36-tal együtt 11 számjegyűnek kell lennie.');
+      return;
+    }
+    const szolgaltatoiElohivo = telefonszamSzamjegyek.slice(2, 4);
+    if (!ERVENYES_TELEFON_ELOHIVOK.has(szolgaltatoiElohivo)) {
+      setError(TELEFONSZAM_ELOHIVO_HIBA);
       return;
     }
 
@@ -78,11 +90,13 @@ export default function RegisterPage() {
 
   return (
     <section className="hero">
-      <div className="hero-content">
+      <div className="hero-content regisztracios-forma-tartalom">
         <h1>Regisztráció</h1>
-        <br />
-        {error && <p style={{ color: 'red', fontWeight: 'bold' }}>{error}</p>}
-        {success && <p style={{ color: 'green', fontWeight: 'bold' }}>{success}</p>}
+
+        <div className="visszajelzo-sav" aria-live="polite">
+          {error ? <p className="visszajelzo-uzenet visszajelzo-hiba">{error}</p> : null}
+          {!error && success ? <p className="visszajelzo-uzenet visszajelzo-siker">{success}</p> : null}
+        </div>
 
         <form onSubmit={handleSubmit}>
           <input

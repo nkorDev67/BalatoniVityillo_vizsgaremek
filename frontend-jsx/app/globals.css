@@ -101,6 +101,32 @@ h1{
     color: white;
     max-width: 600px;
 }
+
+.regisztracios-forma-tartalom {
+    width: min(600px, calc(100% - 32px));
+}
+
+.visszajelzo-sav {
+    min-height: 52px;
+    margin: 12px 0 20px;
+}
+
+.visszajelzo-uzenet {
+    margin: 0;
+    font-weight: 700;
+    border-radius: 12px;
+    padding: 10px 14px;
+}
+
+.visszajelzo-hiba {
+    color: #ff6b6b;
+    background-color: rgba(110, 0, 0, 0.28);
+    border: 1px solid rgba(255, 107, 107, 0.5);
+}
+
+.visszajelzo-siker {
+    color: #b6f0bf;
+}
 input[type=submit] {
   background-color: #4CAF50;
   color: white;

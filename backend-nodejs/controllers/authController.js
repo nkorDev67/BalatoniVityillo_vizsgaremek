@@ -2,6 +2,31 @@ const { poolPromise, sql } = require('../config/dbconfig');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+const ERVENYES_TELEFON_ELOHIVOK = new Set(['20', '30', '50', '70']);
+const TELEFONSZAM_ELOHIVO_HIBA = 'A telefonszám előhívója nem megfelelő. Csak +36 20, +36 30, +36 50 vagy +36 70 kezdetű szám adható meg.';
+
+const normalizaltMagyarTelefonszam = (telefonszam) => {
+    const nyersSzamjegyek = String(telefonszam || '').replace(/\D/g, '');
+    let normalizaltSzamjegyek = nyersSzamjegyek;
+
+    if (normalizaltSzamjegyek.startsWith('06')) {
+        normalizaltSzamjegyek = '36' + normalizaltSzamjegyek.slice(2);
+    } else if (!normalizaltSzamjegyek.startsWith('36')) {
+        normalizaltSzamjegyek = '36' + normalizaltSzamjegyek.replace(/^0+/, '');
+    }
+
+    if (normalizaltSzamjegyek.length !== 11) {
+        return { error: 'A telefonszámnak +36-tal együtt 11 számjegyűnek kell lennie.' };
+    }
+
+    const szolgaltatoiElohivo = normalizaltSzamjegyek.slice(2, 4);
+    if (!ERVENYES_TELEFON_ELOHIVOK.has(szolgaltatoiElohivo)) {
+        return { error: TELEFONSZAM_ELOHIVO_HIBA };
+    }
+
+    return { value: `+${normalizaltSzamjegyek}` };
+};
+
 // REGISZTRÁCIÓ
 exports.register = async (req, res) => {
     try {
@@ -22,15 +47,11 @@ exports.register = async (req, res) => {
             return res.status(400).json({ message: 'A jelszónak legalább 4 karakter hosszúnak kell lennie és tartalmaznia kell számot.' });
         }
 
-        // telefonszám normalizálása: ha nem +36-tal kezdődik, hozzáadjuk
-        if (!telefon.startsWith('+36')) {
-            telefon = '+36' + telefon.replace(/[^0-9]/g, '');
+        const normalizaltTelefonszam = normalizaltMagyarTelefonszam(telefon);
+        if (normalizaltTelefonszam.error) {
+            return res.status(400).json({ message: normalizaltTelefonszam.error });
         }
-        // ellenőrizzük a hosszát (pl. +36 után 9 számjegy)
-        const digits = telefon.replace(/\D/g, '');
-        if (digits.length !== 11) { // +36 + 9 számjegy = 11 szám
-            return res.status(400).json({ message: 'A telefonszámnak +36-tal együtt 11 számjegyűnek kell lennie.' });
-        }
+        telefon = normalizaltTelefonszam.value;
 
         const pool = await poolPromise;
 
@@ -130,6 +151,11 @@ exports.updateProfile = async (req, res) => {
         const { name, email, phone, currentPassword, newPassword } = req.body;
         if (!currentPassword) return res.status(400).json({ message: 'A jelenlegi jelszó megadása kötelező a módosításhoz.' });
 
+        const normalizaltTelefonszam = normalizaltMagyarTelefonszam(phone);
+        if (normalizaltTelefonszam.error) {
+            return res.status(400).json({ message: normalizaltTelefonszam.error });
+        }
+
         const pool = await poolPromise;
         const result = await pool.request()
             .input('id', sql.Int, userId)
@@ -145,7 +171,7 @@ exports.updateProfile = async (req, res) => {
         const reqUpdate = pool.request()
             .input('nev', sql.NVarChar, name)
             .input('email', sql.NVarChar, email)
-            .input('tel', sql.NVarChar, phone)
+            .input('tel', sql.NVarChar, normalizaltTelefonszam.value)
             .input('id', sql.Int, userId);
 
         let updateQuery = 'UPDATE Felhasznalo SET Felhasznalonev = @nev, Email = @email, TelefonSzam = @tel';
@@ -162,7 +188,7 @@ exports.updateProfile = async (req, res) => {
         await reqUpdate.query(updateQuery);
 
         // Visszaadjuk a frissített adatokat
-        res.json({ id: userId, name, email, phone });
+        res.json({ id: userId, name, email, phone: normalizaltTelefonszam.value });
     } catch (err) {
         console.error('updateProfile hiba:', err);
         res.status(500).json({ error: 'Szerverhiba a profil frissítése közben.' });
