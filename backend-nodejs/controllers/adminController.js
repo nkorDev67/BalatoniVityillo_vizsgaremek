@@ -73,6 +73,7 @@ exports.getProfessionals = async (req, res) => {
         const result = await pool.request().query(`
             SELECT 
                 s.SzakemberId AS id, 
+                f.FelhasznaloId AS felhasznaloId,
                 f.Felhasznalonev AS nev, 
                 f.Email AS email, 
                 f.TelefonSzam AS telefonszam,
@@ -137,7 +138,8 @@ exports.addWorkerByEmail = async (req, res) => {
             .input('email', sql.NVarChar, email)
             .query(`
                 SELECT 
-                    f.FelhasznaloId AS id,
+                    s.SzakemberId AS id,
+                    f.FelhasznaloId AS felhasznaloId,
                     f.Felhasznalonev AS nev,
                     f.Email AS email,
                     f.TelefonSzam AS telefonszam,
@@ -160,18 +162,49 @@ exports.removeWorker = async (req, res) => {
     try {
         const id = parseInt(req.params.id, 10);
         if (isNaN(id)) return res.status(400).json({ message: 'Érvénytelen id.' });
+
         const pool = await poolPromise;
-        const result = await pool.request()
+        const workerResult = await pool.request()
             .input('id', sql.Int, id)
-            .query(`UPDATE Felhasznalo SET Jogosultsag = 'felhasznalo' WHERE FelhasznaloId = @id`);
-        if (result.rowsAffected[0] === 0) {
+            .query(`
+                SELECT TOP 1 SzakemberId, FelhasznaloId
+                FROM Szakember
+                WHERE SzakemberId = @id OR FelhasznaloId = @id
+            `);
+
+        const worker = workerResult.recordset[0];
+        if (!worker) {
             return res.status(404).json({ message: 'A megadott azonosítóval nem található szakember.' });
         }
-        // töröljük/eltávolítjuk a Szakember táblából is
-        await pool.request()
-            .input('id', sql.Int, id)
-            .query(`DELETE FROM Szakember WHERE FelhasznaloId = @id`);
-        res.json({ success: true });
+
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        try {
+            const deleteAssignmentsResult = await transaction.request()
+                .input('szakemberId', sql.Int, worker.SzakemberId)
+                .query('DELETE FROM Munkakiosztas WHERE SzakemberId = @szakemberId');
+
+            await transaction.request()
+                .input('szakemberId', sql.Int, worker.SzakemberId)
+                .query('DELETE FROM Szakember WHERE SzakemberId = @szakemberId');
+
+            await transaction.request()
+                .input('felhasznaloId', sql.Int, worker.FelhasznaloId)
+                .query("UPDATE Felhasznalo SET Jogosultsag = 'felhasznalo' WHERE FelhasznaloId = @felhasznaloId");
+
+            await transaction.commit();
+
+            res.json({
+                success: true,
+                felhasznaloId: worker.FelhasznaloId,
+                szakemberId: worker.SzakemberId,
+                toroltBeosztasok: deleteAssignmentsResult.rowsAffected?.[0] ?? 0,
+            });
+        } catch (transactionError) {
+            await transaction.rollback();
+            throw transactionError;
+        }
     } catch (err) {
         console.error('removeWorker hiba:', err);
         res.status(500).json({ error: 'Hiba történt a munkás visszafokozásakor.' });

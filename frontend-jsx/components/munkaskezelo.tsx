@@ -5,6 +5,7 @@ import { API_UTAK, apiVegpont } from '@/lib/utvonalak';
 
 interface Munkas {
   id: number;
+  felhasznaloId?: number;
   nev: string;
   email: string;
   telefonszam: string;
@@ -23,19 +24,26 @@ export default function MunkasKezelo({ munkasok, setMunkasok }: Props) {
   const [ujEmail, setUjEmail] = useState("");
   const [ujSzakma, setUjSzakma] = useState("Festő");
 
-  const handleKirugas = async (id: number) => {
+  const handleKirugas = async (munkas: Munkas) => {
     if (!confirm("Biztosan törölni / visszafokozni szeretnéd ezt a munkást?")) return;
+
     try {
       const token = localStorage.getItem('token');
-      const resp = await fetch(apiVegpont(API_UTAK.adminisztracio.munkas(id)), {
+      const torlesId = munkas.felhasznaloId ?? munkas.id;
+      const resp = await fetch(apiVegpont(API_UTAK.adminisztracio.munkas(torlesId)), {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!resp.ok) throw new Error('A szerver nem válaszolt rendesen');
-      setMunkasok(munkasok.filter(m => m.id !== id));
-    } catch (err) {
+
+      if (!resp.ok) {
+        const errData = await resp.json().catch(() => null);
+        throw new Error(errData?.message || errData?.error || 'A szerver nem válaszolt rendesen');
+      }
+
+      setMunkasok(prev => prev.filter(item => item.id !== munkas.id));
+    } catch (err: any) {
       console.error('kirúgás hiba:', err);
-      alert('Nem sikerült törölni a munkást.');
+      alert('Nem sikerült törölni a munkást: ' + (err.message || 'ismeretlen hiba'));
     }
   };
 
@@ -93,7 +101,7 @@ export default function MunkasKezelo({ munkasok, setMunkasok }: Props) {
                       <div>{munkas.email}</div>
                       <div>{munkas.telefonszam}</div>
                       <div>{munkas.szak || '-'}</div>
-                      <button onClick={() => handleKirugas(munkas.id)} className={styles.fireBtn}>Kirúgás</button>
+                      <button onClick={() => handleKirugas(munkas)} className={styles.fireBtn}>Kirúgás</button>
                     </div>
                   ))}
               </div>
