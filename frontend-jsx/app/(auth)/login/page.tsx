@@ -27,7 +27,7 @@ export default function LoginPage() {
       const data = await response.json();
     if (response.ok) {
         localStorage.setItem('token', data.token);
-        localStorage.setItem('role', data.role); // 'admin' vagy 'user'
+        localStorage.setItem('role', data.role);
 
         if (data.role === 'admin') {
           router.push(OLDAL_UTAK.admin);
@@ -51,49 +51,48 @@ export default function LoginPage() {
 
 
   return (
-    <div className="main-wrapper">
-      <section className="hero">
-        <div className="hero-content">
-          <h1>Bejelentkezés</h1>
-          {error && <p style={{color: 'red', fontWeight: 'bold'}}>{error}</p>}
-          <br />
-          
-          <form onSubmit={handleSubmit}>
-            <input 
-              type="text" 
-              className="inputmezo form-control" 
-              name="login_identity" 
-              placeholder="Email vagy telefonszám" 
-              value={identity}
-              onChange={(e) => setIdentity(e.target.value)}
-              required 
-            /><br /><br />
-            
-            <input 
-              type="password" 
-              className="inputmezo form-control" 
-              name="pw" 
-              placeholder="Jelszó" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required 
-            /><br /><br />
-            
-            <input type="submit" className="gomb form-control" name="belepes" value="Belépés" />
-          </form>
-          <br />
-          
-          {/* Next.js-ben gombok helyett Linket használunk a navigációhoz */}
-          <Link href={OLDAL_UTAK.regisztracio}>
-            <button className="btn secondary">Még nincs fiókom</button>
-          </Link>
-          
-          &nbsp; {/* Kis hely a gombok között */}
-          <Link href="/">
-            <button className="btn primary">Vissza a főoldalra</button>
-          </Link>
+    <section className="hero">
+      <div className="hero-content regisztracios-forma-tartalom">
+        <h1>Bejelentkezés</h1>
+
+        <div className="visszajelzo-sav" aria-live="polite">
+          {error ? <p className="visszajelzo-uzenet visszajelzo-hiba">{error}</p> : null}
         </div>
-      </section>
-    </div>
+
+        <form onSubmit={handleSubmit}>
+          <input 
+            type="text" 
+            className="inputmezo" 
+            name="login_identity" 
+            placeholder="Email vagy telefonszám" 
+            value={identity}
+            onChange={(e) => setIdentity(e.target.value)}
+            required 
+          /><br /><br />
+          
+          <input 
+            type="password" 
+            className="inputmezo" 
+            name="pw" 
+            placeholder="Jelszó" 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required 
+          /><br /><br />
+          
+          <input type="submit" name="belepes" value="Belépés" />
+        </form>
+        <br />
+
+        <Link href={OLDAL_UTAK.regisztracio}>
+          <button className="btn secondary">Még nincs fiókom</button>
+        </Link>
+
+        &nbsp;
+        <Link href="/">
+          <button className="btn primary">Vissza a főoldalra</button>
+        </Link>
+      </div>
+    </section>
   );
 }

@@ -39,7 +39,6 @@ export default function RegisterPage() {
     setError('');
     setSuccess('');
 
-    // frontend validáció
     if (fullName.trim() === '') {
       setError('Teljes név megadása kötelező.');
       return;
@@ -78,7 +77,6 @@ export default function RegisterPage() {
 
       if (response.ok) {
         setSuccess(data.message || 'Sikeres regisztráció!');
-        // opcionálisan átirányíthatjuk a bejelentkező oldalra néhány másodperc után
         setTimeout(() => router.push(OLDAL_UTAK.bejelentkezes), 2000);
       } else {
         setError(data.message || data.error || 'Ismeretlen hiba történt.');
@@ -101,7 +99,7 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit}>
           <input
             type="text"
-            className="inputmezo form-control"
+            className="inputmezo"
             name="un"
             placeholder="Teljes név"
             value={fullName}
@@ -111,7 +109,7 @@ export default function RegisterPage() {
           <br /> <br />
           <input
             type="email"
-            className="inputmezo form-control"
+            className="inputmezo"
             name="email"
             placeholder="Email cím"
             value={email}
@@ -121,7 +119,7 @@ export default function RegisterPage() {
           <br /> <br />
           <input
             type="tel"
-            className="inputmezo form-control"
+            className="inputmezo"
             name="phone"
             placeholder="Telefonszám"
             value={phone}
@@ -131,7 +129,7 @@ export default function RegisterPage() {
           <br /> <br />
           <input
             type="password"
-            className="inputmezo form-control"
+            className="inputmezo"
             name="pw"
             placeholder="Jelszó"
             value={password}
@@ -142,7 +140,6 @@ export default function RegisterPage() {
 
           <input
             type="submit"
-            className="gomb form-control"
             name="regisztracio"
             value="Regisztráció"
           />
@@ -152,7 +149,7 @@ export default function RegisterPage() {
         <Link href={OLDAL_UTAK.bejelentkezes}>
           <button className="btn secondary">Már van fiókom</button>
         </Link>
-        &nbsp; {/* Kis hely a gombok között */}
+        &nbsp;
         <Link href="/">
           <button className="btn primary">Vissza a főoldalra</button>
         </Link>

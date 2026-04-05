@@ -114,7 +114,6 @@
 .saveButton,
 .completeButton,
 .openModalBtn,
-.saveBtn,
 .detailsToggle,
 .fireBtn {
     border: none;
@@ -139,7 +138,6 @@
 .saveButton:hover,
 .completeButton:hover,
 .openModalBtn:hover,
-.saveBtn:hover,
 .detailsToggle:hover,
 .fireBtn:hover {
     transform: translateY(-1px);
@@ -160,7 +158,6 @@
 
 .primaryAction,
 .saveButton,
-.saveBtn,
 .openModalBtn {
     background: linear-gradient(135deg, #c5844d 0%, #a96537 100%);
     color: #fffef9;

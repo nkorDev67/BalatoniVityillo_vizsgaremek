@@ -7,31 +7,16 @@ import { API_UTAK, apiVegpont } from '@/lib/utvonalak';
 
 type HomeStats = {
   completedRemodels: number;
-  satisfiedOwners: number;
   expertTeam: number;
   activeProjects: number;
 };
 
-type FeaturedRequest = {
-  FelujitasId: number;
-  HelyszinCim: string;
-  Statusz: string;
-  KezdesDatuma: string | null;
-  Leiras: string;
-  UgyfelNeve: string;
-  OsszAr: number;
-  FeladatDb: number;
-};
-
 type HomePayload = {
   stats: HomeStats;
-  featuredRequests: FeaturedRequest[];
-  updatedAt?: string;
 };
 
 const defaultStats: HomeStats = {
   completedRemodels: 0,
-  satisfiedOwners: 0,
   expertTeam: 0,
   activeProjects: 0,
 };
@@ -39,13 +24,13 @@ const defaultStats: HomeStats = {
 const serviceCards = [
   {
     title: 'Teljes felújítás-koordináció',
-    description: 'A helyszíni felméréstől a szakemberek koordinálásáig egy kézben tartjuk a balatoni ingatlanod teljes munkafolyamatát.',
+    description: 'Nem kell többé aggódnod a szakemberek szervezése miatt, mert mi mindent kézben tartunkunk! A felújítási igényedet egy helyen adhatod meg, mi pedig gondoskodunk a szakemberek kiválasztásáról, a munkák ütemezéséről és a kommunikáció gördülékenységéről.',
     href: '/felujitaskeres',
     action: 'Felújítást kérek',
   },
   {
-    title: 'Állapotkövetés online',
-    description: 'Fotók, státuszfrissítések és dokumentumok egy helyen, hogy akkor is képben legyél, ha nem vagy a Balatonnál.',
+    title: 'Átlátható profil és státusz',
+    description: 'Profilod egy hely, ahol minden fontos információt megtalálsz a nyaralódról: a felújítási előzményektől a szakemberek értékelésein át a következő teendők listájáig.',
     href: '/profil',
     action: 'Megnézem a profilt',
   },
@@ -61,14 +46,11 @@ const processSteps = [
   'Regisztrálsz, és megadod az ingatlan alapadatait.',
   'Beküldöd a felújítási igényt a belső felületen.',
   'Az admin jóváhagyja és szakembereket rendel a feladatokhoz.',
-  'A kivitelezés közben valós állapotokat és fotókat követsz az oldalról.',
+  'Miután a szakemberek elvégzik a munkát, értesítenek a megadott elérhetőségeiden.',
 ];
 
 export default function Home() {
   const [stats, setStats] = useState<HomeStats>(defaultStats);
-  const [featuredRequests, setFeaturedRequests] = useState<FeaturedRequest[]>([]);
-  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -81,16 +63,11 @@ export default function Home() {
 
         const data: HomePayload = await response.json();
         setStats(data.stats ?? defaultStats);
-        setFeaturedRequests(data.featuredRequests ?? []);
-        setUpdatedAt(data.updatedAt ?? null);
         setError(null);
       } catch (error) {
         console.error('Hiba a kezdőoldal adatainak lekérésekor:', error);
         setStats(defaultStats);
-        setFeaturedRequests([]);
         setError('A háttérrendszer jelenleg nem válaszol, ezért csak az alap információk látszanak.');
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -115,36 +92,6 @@ export default function Home() {
 
     return () => observer.disconnect();
   }, []);
-
-  const formattedUpdatedAt = updatedAt
-    ? new Intl.DateTimeFormat('hu-HU', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }).format(new Date(updatedAt))
-    : null;
-
-  const formatDate = (value: string | null) => {
-    if (!value) {
-      return 'Időpont egyeztetés alatt';
-    }
-
-    return new Intl.DateTimeFormat('hu-HU', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }).format(new Date(value));
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('hu-HU', {
-      style: 'currency',
-      currency: 'HUF',
-      maximumFractionDigits: 0,
-    }).format(value || 0);
-  };
 
   return (
     <div className="homepage-shell">
@@ -177,28 +124,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-
-          <aside className="hero-side-panel glass-card" data-reveal>
-            <span className="panel-label">Élő rendszerállapot</span>
-            <h2>Az adatbázisból érkező friss számok a kezdőlapon is látszanak.</h2>
-            <ul className="live-stats-list">
-              <li>
-                <span>Befejezett felújítások</span>
-                <strong>{stats.completedRemodels}</strong>
-              </li>
-              <li>
-                <span>Ügyfelek és szakemberek</span>
-                <strong>{`${stats.satisfiedOwners} ügyfél / ${stats.expertTeam} szakember`}</strong>
-              </li>
-              <li>
-                <span>Aktív projektek</span>
-                <strong>{stats.activeProjects}</strong>
-              </li>
-            </ul>
-            <p className="panel-footnote">
-              {loading ? 'Adatok betöltése folyamatban...' : formattedUpdatedAt ? `Utolsó frissítés: ${formattedUpdatedAt}` : 'A rendszer készen áll az adatok fogadására.'}
-            </p>
-          </aside>
         </div>
       </section>
 
@@ -251,11 +176,12 @@ export default function Home() {
 
           <div className="glass-panel highlight-panel" data-reveal>
             <span className="kicker">Miért jobb most?</span>
-            <h2>Gyorsabb eligazodás, kevesebb törés a felületen.</h2>
+            <h2>Miért minket válassz?</h2>
             <ul className="benefit-list">
-              <li>Mobilon is megnyitható, zárható és átlátható navigáció.</li>
-              <li>Lágy beúszások és görgetés közbeni megjelenések a fontos blokkokon.</li>
-              <li>Valós projektszámok és legfrissebb munkák közvetlenül a home page-en.</li>
+              <li>Mobilon is megnyitható és átlátható a navigáció.</li>
+              <li>Könnyen kezelhető felület.</li>
+              <li>Valós projektszámok és legfrissebb munkák közvetlenül a kezdőlapon.</li>
+              <li>Megbízható és szorgalmas munkaerő.</li>
             </ul>
           </div>
         </section>

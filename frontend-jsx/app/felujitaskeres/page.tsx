@@ -16,7 +16,7 @@ export default function FelujitasKeresePage() {
     const [specifikaciok, setSpecifikaciok] = useState<{ [key: string]: string }>({});
 
     const tipusokOptions = [
-        { value: 'festes', label: 'Festés', ar: 2000 }, // Ft/m²
+        { value: 'festes', label: 'Festés', ar: 2000 },
         { value: 'burkolas', label: 'Burkolás', ar: 5000 },
         { value: 'vizvezetek', label: 'Vízvezeték szerelés', ar: 8000 },
         { value: 'villanyszereles', label: 'Villanyszerelés', ar: 7000 },

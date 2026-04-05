@@ -1,4 +1,4 @@
-"use client"; // Ez kell, mert van benne interakció (állapotkezelés)
+"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
@@ -45,7 +45,6 @@ export default function BeosztasPage() {
           return;
         }
 
-        // Beosztások lekérése: csak a bejelentkezett szakember saját beosztásai
         const assignmentsRes = await fetch(apiVegpont(API_UTAK.beosztas.sajatBeosztasok), {
           method: 'GET',
           headers: {
@@ -73,25 +72,28 @@ export default function BeosztasPage() {
   const markFinished = async (assignment: any) => {
     const token = localStorage.getItem('token');
     if (!token) return;
+
     try {
       const id = assignment.FeladatId ?? assignment.feladatId ?? assignment.FeladatID ?? assignment.id ?? assignment.feladat?.FeladatId ?? assignment.feladat?.feladatId;
-      console.log('markFinished called for assignment, resolved id=', id);
       const endpoint = apiVegpont(API_UTAK.beosztas.befejezes(id));
-      console.log('Calling endpoint:', endpoint);
       const res = await fetch(endpoint, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
+
       if (res.ok) {
-        setAssignments(prev => prev.filter(a => !( (a.FeladatId ?? a.feladatId) === (assignment.FeladatId ?? assignment.feladatId) )));
+        setAssignments(prev => prev.filter(a => !((a.FeladatId ?? a.feladatId) === (assignment.FeladatId ?? assignment.feladatId))));
       } else {
-        // próbáljuk kiolvasni json-t, ha van, különben sima szöveget
         let bodyText = '';
         try {
           const json = await res.json();
           bodyText = JSON.stringify(json);
         } catch (e) {
-          try { bodyText = await res.text(); } catch (_) { bodyText = ''; }
+          try {
+            bodyText = await res.text();
+          } catch (_) {
+            bodyText = '';
+          }
         }
         const msg = `Hiba: ${res.status} ${res.statusText} ${bodyText}`;
         console.error('complete assignment failed:', msg);
@@ -101,6 +103,11 @@ export default function BeosztasPage() {
       setError('Hálózati hiba történt.');
     }
   };
+
+  const activeAssignments = assignments.filter((assignment) => {
+    const status = (assignment.Statusz ?? assignment.statusz ?? '').toString().trim().toLowerCase();
+    return status !== 'befejezve';
+  });
 
   if (checking || !allowed) {
     return null;
@@ -131,7 +138,7 @@ export default function BeosztasPage() {
   return (
     <main className="container mt-4 main-wrapper">
       <h1>Balatoni Vityilló</h1>
-      
+
       <div id="beosztas-kontener">
         {user ? (
           <div>
@@ -140,15 +147,14 @@ export default function BeosztasPage() {
               <p>Üdvözöljük, <strong>{user.nev}</strong>! Az alábbi felújítási munkákra vagy beosztva:</p>
             </div>
 
-            {assignments && assignments.length > 0 ? (
+            {activeAssignments.length > 0 ? (
               <div className="assignments-grid">
-                {assignments
-                  .filter((a) => {
-                    const status = (a.Statusz ?? a.statusz ?? '').toString().trim().toLowerCase();
-                    return status !== 'befejezve';
-                  })
-                  .map((assignment, index) => (
-                    <div key={index} className="assignment-card">
+                {activeAssignments.map((assignment, index) => {
+                  const assignmentId = assignment.FeladatId ?? assignment.feladatId ?? assignment.FeladatID ?? assignment.id ?? index;
+                  const status = ((assignment.Statusz ?? assignment.statusz) || '').toString().trim().toLowerCase();
+
+                  return (
+                    <div key={assignmentId} className="assignment-card">
                       <div className="card h-100 shadow-sm">
                         <div className="card-body">
                           <h5 className="card-title text-primary">{assignment.FeladatTipus}</h5>
@@ -170,13 +176,14 @@ export default function BeosztasPage() {
                         </div>
                         <div className="card-footer bg-transparent d-flex justify-content-between align-items-center">
                           <span className="badge bg-success">Hozzád rendelve</span>
-                          {((assignment.Statusz ?? assignment.statusz) || '').toString().trim().toLowerCase() !== 'befejezve' && (
+                          {status !== 'befejezve' ? (
                             <button className="btn btn-sm btn-outline-success" onClick={() => markFinished(assignment)}>Befejezés</button>
-                          )}
+                          ) : null}
                         </div>
                       </div>
                     </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="alert alert-secondary">Nincs aktív munkabeosztásod.</div>
