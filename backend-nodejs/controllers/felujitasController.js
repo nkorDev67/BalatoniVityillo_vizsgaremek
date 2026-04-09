@@ -5,22 +5,55 @@ exports.createRequest = async (req, res) => {
     const {helyszinCim, feladatok, leiras} = req.body;
     const felhasznaloId= req.user.id;
 
+    const tisztitottCim = typeof helyszinCim === 'string' ? helyszinCim.trim() : '';
+    const tisztitottLeiras = typeof leiras === 'string' ? leiras.trim() : '';
+    const ervenyesFeladatok = Array.isArray(feladatok)
+        ? feladatok.map((feladat) => ({
+            tipus: typeof feladat?.tipus === 'string' ? feladat.tipus.trim() : '',
+            terulet: Number(feladat?.terulet),
+            ar: Number(feladat?.ar)
+        }))
+        : [];
+
+    if (!tisztitottCim) {
+        return res.status(400).json({ error: 'Adj meg legalább egy címet.' });
+    }
+
+    if (ervenyesFeladatok.length === 0) {
+        return res.status(400).json({ error: 'Válassz ki legalább egy műveletet.' });
+    }
+
+    const hianyosFeladat = ervenyesFeladatok.some((feladat) => (
+        !feladat.tipus
+        || !Number.isFinite(feladat.terulet)
+        || feladat.terulet <= 0
+        || !Number.isFinite(feladat.ar)
+        || feladat.ar < 0
+    ));
+
+    if (hianyosFeladat) {
+        return res.status(400).json({ error: 'A kiválasztott műveletek adatai hiányosak vagy hibásak.' });
+    }
+
     const pool = await poolPromise;
     const transaction = new sql.Transaction(pool);
+    let transactionStarted = false;
+
     try{
         await transaction.begin();
+        transactionStarted = true;
 
         const felujitasResult = await transaction.request()
         .input('uId', sql.Int, felhasznaloId)
-        .input('cim', sql.NVarChar, helyszinCim)
-        .input('leiras', sql.NVarChar, leiras)
+        .input('cim', sql.NVarChar, tisztitottCim)
+        .input('leiras', sql.NVarChar, tisztitottLeiras)
         .query(`INSERT INTO Felujitas (FelhasznaloId, HelyszinCim, Leiras, Statusz)
             OUTPUT INSERTED.FelujitasId
             VALUES (@uId, @cim, @leiras, 'Feldolgozás alatt')`);
 
         const newId = felujitasResult.recordset[0].FelujitasId;
 
-        for (const f of feladatok){
+        for (const f of ervenyesFeladatok){
             await transaction.request()
                 .input('fId', sql.Int, newId)
                 .input('tipus', sql.NVarChar, f.tipus)
@@ -34,7 +67,9 @@ exports.createRequest = async (req, res) => {
         res.status(201).json({massage: "Sikeres mentés, az Admin látni fogja", id: newId});
 
     } catch (err) {
-        await transaction.rollback();
+        if (transactionStarted) {
+            await transaction.rollback();
+        }
         console.error("Hiba a mentésnél:", err);
         res.status(500).json({ error: "Szerverhiba a kérés beküldésekor." });
     

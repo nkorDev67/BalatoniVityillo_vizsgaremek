@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from '../app/admin/admin.module.css'; 
 import { API_UTAK, apiVegpont } from '@/lib/utvonalak';
 
@@ -23,6 +23,15 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
     const [datum, setDatum] = useState("");
     const [betoltes, setBetoltes] = useState(false);
     const [nyitva, setNyitva] = useState(false);
+    const [aktualisStatusz, setAktualisStatusz] = useState(keres.Statusz);
+    const [aktualisKezdesDatum, setAktualisKezdesDatum] = useState(keres.KezdesDatuma || '');
+
+    useEffect(() => {
+        setAktualisStatusz(keres.Statusz);
+        setAktualisKezdesDatum(keres.KezdesDatuma || '');
+    }, [keres.Statusz, keres.KezdesDatuma]);
+
+    const vanRogzitettIdopont = Boolean(aktualisKezdesDatum);
 
     const handleMentes = async () => {
         if (!datum) {
@@ -47,7 +56,9 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
 
             if (response.ok) {
                 alert("Sikeresen ütemezve!");
-                
+                setAktualisStatusz('Ütemezve');
+                setAktualisKezdesDatum(datum);
+                setDatum('');
             } else {
                 alert("Hiba történt a mentés során.");
             }
@@ -68,7 +79,7 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
         body: JSON.stringify({
             felujitasId: keres.FelujitasId,
             ujStatusz: 'Befejezve',
-            ujDatum: keres.KezdesDatuma
+            ujDatum: aktualisKezdesDatum
         })
     });
 
@@ -86,7 +97,7 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
         <div className={styles.requestCard}>
             <div className={styles.header}>
                 <h3>{keres.UgyfelNeve}</h3>
-                <span className={styles.statusBadge}>{keres.Statusz}</span>
+                <span className={styles.statusBadge}>{aktualisStatusz}</span>
             </div>
             
             <div className={styles.body}>
@@ -98,7 +109,7 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
                 </p>
                  </div>
                 <p className={styles.dateInfo}>
-                    Tervezett kezdés: {keres.KezdesDatuma ? new Date(keres.KezdesDatuma).toLocaleDateString('hu-HU') : 'Még nincs ütemezve'}
+                    Tervezett kezdés: {aktualisKezdesDatum ? new Date(aktualisKezdesDatum).toLocaleDateString('hu-HU') : 'Még nincs ütemezve'}
                 </p>
                 <button 
                     className={styles.detailsToggle} 
@@ -128,26 +139,32 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
             </div>
 
             <div className={styles.footer}>
-               <label>Kezdés dátuma:</label>
-                <input 
-                    type="date" 
-                    className={styles.dateInput}
-                    value={datum}
-                    onChange={(e) => setDatum(e.target.value)}
-                />
-                <button 
-                    className={styles.saveButton} 
-                    onClick={handleMentes}
-                    disabled={betoltes}
-                >
-                    {betoltes ? 'Mentés...' : 'Időpont rögzítése'}
-                </button>
-                {keres.Statusz == 'Ütemezve' && (
+                {!vanRogzitettIdopont ? (
+                    <>
+                        <label>Kezdés dátuma:</label>
+                        <input 
+                            type="date" 
+                            className={styles.dateInput}
+                            value={datum}
+                            onChange={(e) => setDatum(e.target.value)}
+                        />
+                        <button 
+                            className={styles.saveButton} 
+                            onClick={handleMentes}
+                            disabled={betoltes}
+                        >
+                            {betoltes ? 'Mentés...' : 'Időpont rögzítése'}
+                        </button>
+                    </>
+                ) : (
+                    <p className={styles.actionNote}>Időpont rögzítve</p>
+                )}
+                {vanRogzitettIdopont && (
                     <button 
                         className={styles.completeButton} 
                         onClick={handleBefejezes}>
                         Projekt lezárása
-                        </button>
+                    </button>
                 )}
             </div>
         </div>

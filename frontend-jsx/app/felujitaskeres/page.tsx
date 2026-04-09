@@ -14,6 +14,7 @@ export default function FelujitasKeresePage() {
     const [megjegyzes, setMegjegyzes] = useState('');
     const [uzenet, setUzenet] = useState('');
     const [specifikaciok, setSpecifikaciok] = useState<{ [key: string]: string }>({});
+    const [submitAttempted, setSubmitAttempted] = useState(false);
 
     const tipusokOptions = [
         { value: 'festes', label: 'Festés', ar: 2000 },
@@ -58,55 +59,86 @@ export default function FelujitasKeresePage() {
         }, 0);
     };
 
+    const vanCim = lakasCim.trim().length > 0;
+    const vanValasztottMuvelet = valasztottTipusok.length > 0;
+    const vanHianyosFeladat = valasztottTipusok.some((tipus) => {
+        const terulet = Number(teruletPerTipus[tipus]);
+
+        if (!Number.isFinite(terulet) || terulet <= 0) {
+            return true;
+        }
+
+        if (needsSpecification(tipus) && !specifikaciok[tipus]?.trim()) {
+            return true;
+        }
+
+        return false;
+    });
+
+    const urlapHiba = !vanCim
+        ? 'Adj meg legalabb egy cimet.'
+        : !vanValasztottMuvelet
+            ? 'Valassz ki legalabb egy muveletet.'
+            : vanHianyosFeladat
+                ? 'Minden kivalasztott muvelethez add meg a kotelezo adatokat.'
+                : '';
+    const alapAdatokRendben = vanCim && vanValasztottMuvelet;
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!allowed) {
+        setSubmitAttempted(true);
+        setUzenet('');
+
+        if (!allowed || urlapHiba) {
             return;
         }
 
         const feladatokTomb = valasztottTipusok.map((tipus) => {
-        const option = tipusokOptions.find(o => o.value === tipus);
-        return {
+            const option = tipusokOptions.find(o => o.value === tipus);
+            const terulet = Number(teruletPerTipus[tipus]);
+            const specifikacio = specifikaciok[tipus]?.trim();
 
-            tipus: specifikaciok[tipus] 
-                ? `${option?.label} (${specifikaciok[tipus]})` 
-                : (option?.label || tipus),
-            terulet: parseFloat(teruletPerTipus[tipus]) || 0,
-            ar: calculatePrice(tipus, teruletPerTipus[tipus] || '0')
-        };
-    });
-
-    const payload = {
-        helyszinCim: lakasCim, 
-        leiras: megjegyzes,    
-        feladatok: feladatokTomb
-    };
-    const token = localStorage.getItem("token");
-    try {
-        const response = await fetch(apiVegpont(API_UTAK.felujitas.keres), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(payload)
+            return {
+                tipus: specifikacio
+                    ? `${option?.label} (${specifikacio})`
+                    : (option?.label || tipus),
+                terulet,
+                ar: calculatePrice(tipus, String(terulet))
+            };
         });
 
-        if (response.ok) {
-            setUzenet('A felújítási kérés sikeresen elküldve!');
-           
-            setLakasCim('');
-            setValasztottTipusok([]);
-            setTeruletPerTipus({});
-            setMegjegyzes('');
-            setSpecifikaciok({});
-        } else {
-            const errorData = await response.json();
-            setUzenet(`Hiba: ${errorData.error || 'Szerver hiba'}`);
+        const payload = {
+            helyszinCim: lakasCim.trim(),
+            leiras: megjegyzes.trim(),
+            feladatok: feladatokTomb
+        };
+        const token = localStorage.getItem("token");
+
+        try {
+            const response = await fetch(apiVegpont(API_UTAK.felujitas.keres), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                setUzenet('A felújítási kérés sikeresen elküldve!');
+                setLakasCim('');
+                setValasztottTipusok([]);
+                setTeruletPerTipus({});
+                setMegjegyzes('');
+                setSpecifikaciok({});
+                setSubmitAttempted(false);
+            } else {
+                const errorData = await response.json();
+                setUzenet(`Hiba: ${errorData.error || 'Szerver hiba'}`);
+            }
+        } catch (error) {
+            setUzenet('Hiba az adatküldés során! Ellenőrizd a szervert.');
         }
-    } catch (error) {
-        setUzenet('Hiba az adatküldés során! Ellenőrizd a szervert.');
-    }
     };
 
     if (checking || !allowed) {
@@ -135,9 +167,11 @@ export default function FelujitasKeresePage() {
                         placeholder="Írd be a címet"
                         value={lakasCim}
                         onChange={(e) => setLakasCim(e.target.value)}
-                        className={styles.textInput}
+                        className={`${styles.textInput} ${submitAttempted && !vanCim ? styles.invalidInput : ''}`}
+                        aria-invalid={submitAttempted && !vanCim}
                         required
                     />
+                    {submitAttempted && !vanCim ? <p className={styles.fieldError}>Adj meg legalább egy címet.</p> : null}
                     </div>
 
                     <div className={styles.fieldGroup}>
@@ -147,7 +181,8 @@ export default function FelujitasKeresePage() {
                         name="feladatTipus"
                         value={feladatTipus}
                         onChange={handleTipusChange}
-                        className={styles.selectInput}
+                        className={`${styles.selectInput} ${submitAttempted && !vanValasztottMuvelet ? styles.invalidInput : ''}`}
+                        aria-invalid={submitAttempted && !vanValasztottMuvelet}
                     >
                         <option value="">Válassz egy típust</option>
                         {tipusokOptions.map((option) => (
@@ -156,6 +191,7 @@ export default function FelujitasKeresePage() {
                             </option>
                         ))}
                     </select>
+                    {submitAttempted && !vanValasztottMuvelet ? <p className={styles.fieldError}>Válassz ki legalább egy műveletet.</p> : null}
                     </div>
                 </div>
 
@@ -171,6 +207,9 @@ export default function FelujitasKeresePage() {
                             {valasztottTipusok.map((tipus) => {
                                 const option = tipusokOptions.find(o => o.value === tipus);
                                 const tipusAr = calculatePrice(tipus, teruletPerTipus[tipus] || '0');
+                                const hibasTerulet = submitAttempted && (!Number.isFinite(Number(teruletPerTipus[tipus])) || Number(teruletPerTipus[tipus]) <= 0);
+                                const hibasSpecifikacio = submitAttempted && needsSpecification(tipus) && !specifikaciok[tipus]?.trim();
+
                                 return (
                                     <div key={tipus} className={styles.taskRow}>
                                         <div className={styles.taskHeader}>
@@ -192,7 +231,10 @@ export default function FelujitasKeresePage() {
                                                 ...teruletPerTipus,
                                                 [tipus]: e.target.value
                                             })}
-                                            className={styles.numberInput}
+                                            className={`${styles.numberInput} ${hibasTerulet ? styles.invalidInput : ''}`}
+                                            aria-invalid={hibasTerulet}
+                                            min="1"
+                                            step="1"
                                             required
                                         />
                                         {needsSpecification(tipus) && (
@@ -204,10 +246,13 @@ export default function FelujitasKeresePage() {
                                                     ...specifikaciok,
                                                     [tipus]: e.target.value
                                                 })}
-                                                className={styles.specInput}
+                                                className={`${styles.specInput} ${hibasSpecifikacio ? styles.invalidInput : ''}`}
+                                                aria-invalid={hibasSpecifikacio}
                                                 required
                                             />
                                         )}
+                                        {hibasTerulet ? <p className={styles.fieldError}>Adj meg 0-nál nagyobb területet.</p> : null}
+                                        {hibasSpecifikacio ? <p className={styles.fieldError}>Ehhez a művelethez részletezést is meg kell adni.</p> : null}
                                         </div>
                                         <div className={styles.priceTag}>
                                             {tipusAr.toLocaleString('hu-HU')} Ft
@@ -216,6 +261,7 @@ export default function FelujitasKeresePage() {
                                 );
                             })}
                         </div>
+                        {submitAttempted && vanHianyosFeladat ? <p className={styles.fieldError}>Minden kiválasztott művelethez tölts ki minden kötelező adatot.</p> : null}
                         <div className={styles.priceSummary}>
                             <p className={styles.priceNotice}>Adminisztrációs feldolgozás után a végleges ár változhat.</p>
                             <strong className={styles.priceTotal}>Összesen: {calculateTotalPrice().toLocaleString('hu-HU')} Ft</strong>
@@ -235,7 +281,8 @@ export default function FelujitasKeresePage() {
                     />
                 </div>
 
-                <button type="submit" className={styles.submitButton}>Kérés elküldése</button>
+                {!alapAdatokRendben ? <p className={styles.helperText}>A beküldéshez adj meg legalább egy címet és válassz ki legalább egy műveletet.</p> : null}
+                <button type="submit" className={styles.submitButton} disabled={!alapAdatokRendben}>Kérés elküldése</button>
             </form>
 
             {uzenet ? <div id="uzenet" className={styles.messageBox}>{uzenet}</div> : null}

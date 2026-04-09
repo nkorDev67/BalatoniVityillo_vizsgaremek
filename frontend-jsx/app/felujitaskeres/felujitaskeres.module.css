@@ -104,6 +104,25 @@
   border-color: rgba(36, 36, 36, 0.3);
 }
 
+.invalidInput {
+  border-color: rgba(166, 58, 37, 0.7);
+  background: rgba(166, 58, 37, 0.08);
+}
+
+.fieldError,
+.helperText {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.fieldError {
+  color: #8c3527;
+}
+
+.helperText {
+  color: #646464;
+}
+
 .textareaInput {
   min-height: 140px;
   resize: vertical;
@@ -179,6 +198,12 @@
 .removeButton:hover,
 .submitButton:hover {
   transform: translateY(-1px);
+}
+
+.submitButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+  transform: none;
 }
 
 .taskFields {
