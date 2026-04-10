@@ -38,6 +38,14 @@ export default function AdminCard({ keres }: { keres: FelujitasKeres }) {
             alert("Kérlek, válassz egy dátumot!");
             return;
         }
+        const ma = new Date();
+        ma.setHours(0, 0, 0, 0); // Csak a napot nézzük, az órát/percet nem
+        const valasztottDatum = new Date(datum);
+
+        if (valasztottDatum < ma) {
+            alert("Hiba: A kezdési dátum nem lehet a múltban!");
+            return; // Megállítjuk a folyamatot, nem küldjük el a szervernek
+        }
 
         setBetoltes(true);
         try {
