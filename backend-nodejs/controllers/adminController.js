@@ -96,6 +96,19 @@ exports.addWorkerByEmail = async (req, res) => {
         if (!email) return res.status(400).json({ message: 'Email megadása kötelező.' });
 
         const pool = await poolPromise;
+
+        const checkUser = await pool.request()
+            .input('email', sql.NVarChar, email)
+            .query('SELECT Jogosultsag FROM Felhasznalo WHERE Email = @email');
+
+        if (checkUser.recordset.length === 0) {
+            return res.status(404).json({ message: 'A megadott emailhez nem található felhasználó.' });
+        }
+
+        if (checkUser.recordset[0].Jogosultsag === 'szakember') {
+            return res.status(400).json({ message: 'Ez a felhasználó már szakemberként szerepel a rendszerben!' });
+        }
+        
         // először csak a szerepkört állítjuk át
         const updateReq = pool.request().input('email', sql.NVarChar, email);
         const roleResult = await updateReq.query(`UPDATE Felhasznalo SET Jogosultsag = 'szakember' WHERE Email = @email`);

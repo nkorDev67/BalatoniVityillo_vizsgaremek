@@ -59,20 +59,30 @@ export default function MunkasKezelo({ munkasok, setMunkasok }: Props) {
         },
         body: JSON.stringify({ email: ujEmail, szak: ujSzakma }),
       });
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.message || 'Hiba történt a munkás felvételekor');
-      }
-      const uj = await response.json();
-      // frissítsük a lista állapotát (szakemberként kell megjelenni)
-      if (uj.jogosultsag === 'szakember') {
-        setMunkasok(prev => [...prev, uj]);
-      }
-      setUjEmail("");
-      setIsModalOpen(false);
+      const data = await response.json(); // Egyszer olvassuk ki a választ
+
+        if (!response.ok) {
+            // Itt ugrik fel a backend üzenete: "Ez a felhasználó már szakember..."
+            alert("Hiba: " + (data.message || 'Ismeretlen hiba történt'));
+            return; // Megállítjuk a futást, nem megyünk tovább a frissítésre
+        }
+
+        // Ha idáig eljutott, a válasz OK (200)
+        alert("Szakember sikeresen hozzáadva!");
+
+        // Frissítsük a lista állapotát
+        if (data.jogosultsag === 'szakember') {
+            setMunkasok(prev => [...prev, data]);
+        }
+
+        // Mezők ürítése és modal bezárása
+        setUjEmail("");
+        setUjSzakma(""); // Érdemes ezt is üríteni
+        setIsModalOpen(false);
+
     } catch (err: any) {
-      alert('Nem sikerült felvenni a munkást: ' + err.message);
-      console.error(err);
+        alert('Hálózati hiba történt: ' + err.message);
+        console.error(err);
     }
   };
 
